@@ -84,3 +84,5 @@ target_compile_definitions(
     BUILDID_OFFS=0x100
     BUILDID_SIZE=0x400
 )
+
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
