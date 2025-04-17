@@ -10,28 +10,14 @@ endif()
 # when compiling with PCH enabled
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_package(PkgConfig)
+pkg_check_modules(etherbone etherbone)
+
 project(carpedm
     VERSION 9.0.0
 )
 
 set(LZM_PATH ${PROJECT_SOURCE_DIR}/lib/lzma)
-# find_package(etherbone REQUIRED)
-
-find_path(etherbone_INCLUDE_DIR
-  NAMES etherbone.h
-  HINTS /usr/local/include
-)
-
-find_library(etherbone_LIBRARY
-    NAMES
-        etherbone
-        libetherbone.so
-        libetherbone.so
-    HINTS
-        /usr/local/lib/
-    REQUIRED
-)
-
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(etherbone
@@ -39,9 +25,6 @@ find_package_handle_standard_args(etherbone
     etherbone_LIBRARY
     etherbone_INCLUDE_DIR
 )
-
-message("etherbone_LIBRARY = ${etherbone_LIBRARY}")
-message("etherbone_INCLUDE_DIR = ${etherbone_INCLUDE_DIR}")
 
 set(LZM_SOURCE_FILES
     ${LZM_PATH}/LzmaEnc.c
