@@ -68,6 +68,7 @@ set(SOURCES
 configure_file(${PROJECT_SOURCE_DIR}/src/target_info.h.in target_info.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${CMAKE_PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 target_include_directories(
     ${PROJECT_NAME}
     PRIVATE
