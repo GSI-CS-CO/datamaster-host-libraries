@@ -2,6 +2,7 @@
 #define _DOTSTR_H_
 
 #include <string>
+#include <cstdint>
 
 namespace DotStr {
 

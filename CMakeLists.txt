@@ -11,20 +11,14 @@ endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(PkgConfig)
-pkg_check_modules(etherbone etherbone)
+pkg_check_modules(etherbone REQUIRED etherbone)
+pkg_check_modules(Boost REQUIRED)
 
 project(carpedm
     VERSION 9.0.0
 )
 
 set(LZM_PATH ${PROJECT_SOURCE_DIR}/lib/lzma)
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(etherbone
-  REQUIRED_VARS
-    etherbone_LIBRARY
-    etherbone_INCLUDE_DIR
-)
 
 set(LZM_SOURCE_FILES
     ${LZM_PATH}/LzmaEnc.c
