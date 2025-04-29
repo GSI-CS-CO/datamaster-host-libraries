@@ -1,0 +1,9 @@
+[submodule "modules/datamaster-host-libraries"]
+	path = modules/datamaster-host-libraries
+	url = git@github.com:GSI-CS-CO/datamaster-host-libraries.git
+[submodule "modules/fesa-class-generator"]
+	path = modules/fesa-class-generator
+	url = git@git.acc.gsi.de:fesa-classes/Generator.git
+[submodule "modules/fesa-du-generator"]
+	path = modules/fesa-du-generator
+	url = git@git.acc.gsi.de:fesa-deploy-units/Generator_DU.git
