@@ -10,9 +10,11 @@ endif()
 # when compiling with PCH enabled
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_package(Boost REQUIRED COMPONENTS serialization graph)
+
 find_package(PkgConfig)
 pkg_check_modules(etherbone REQUIRED etherbone)
-pkg_check_modules(Boost REQUIRED)
+pkg_check_modules(libxml2 REQUIRED libxml-2.0)
 
 project(carpedm
     VERSION 9.0.0
@@ -26,7 +28,6 @@ set(LZM_SOURCE_FILES
     ${LZM_PATH}/LzFind.c
 )
 
-message("CMAKE_PROJECT_VERSION = ${CMAKE_PROJECT_VERSION}")
 set(CMAKE_PROJECT_VERSION ${CMAKE_PROJECT_VERSION})
 set(SOURCES
     ${PROJECT_SOURCE_DIR}/src/grouptable.cpp
@@ -67,7 +68,7 @@ set(SOURCES
 
 configure_file(${PROJECT_SOURCE_DIR}/src/target_info.h.in target_info.h)
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCES} ${LZM_SOURCE_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${CMAKE_PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 target_include_directories(
     ${PROJECT_NAME}
@@ -75,15 +76,20 @@ target_include_directories(
         ${LZM_PATH}
         ${PROJECT_SOURCE_DIR}/lib/dm_diag/
         "${CMAKE_CURRENT_BINARY_DIR}"
+        ${libxml_INCLUDE_DIRS}
+    PUBLIC
+        ${Boost_INCLUDE_DIRS}
+        ${PROJECT_SOURCE_DIR}/include
 )
 
-target_link_libraries(${PROJECT_NAME} etherbone)
+target_link_libraries(${PROJECT_NAME} etherbone ${libxml2_LIBRARIES} Boost::serialization Boost::graph lzma)
 target_compile_definitions(
     ${PROJECT_NAME}
     PRIVATE
     ETHERBONE_THROWS
     BUILDID_OFFS=0x100
     BUILDID_SIZE=0x400
+    _7ZIP_ST=TRUE
 )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
