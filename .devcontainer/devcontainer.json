@@ -1,0 +1,13 @@
+{
+    "build": {
+        "dockerfile": "Containerfile",
+        "context": "..",
+        "args": {
+            "USERNAME": "vscode",
+            "USER_UID": "1000",
+            "USER_GID": "1000"
+        }
+    },
+    "remoteUser": "vscode",
+    "containerUser": "vscode"
+}

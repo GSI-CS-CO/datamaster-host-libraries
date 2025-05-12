@@ -11,6 +11,8 @@ endif()
 # when compiling with PCH enabled
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 project(datamaster-host-build
     VERSION 9.0.0
 )
@@ -18,3 +20,4 @@ project(datamaster-host-build
 add_subdirectory(modules/datamaster-host-libraries)
 add_subdirectory(modules/fesa-class-generator)
 add_subdirectory(modules/fesa-du-generator)
+add_subdirectory(modules/datamaster-firmware)
