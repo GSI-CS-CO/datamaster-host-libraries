@@ -20,7 +20,7 @@ namespace DotStr {
       extern const std::string sNodeHash;
       extern const std::string sNodeFlags;
       extern const std::string sNodeDefDst;
-    }  
+    }
   }
 
   namespace Misc {

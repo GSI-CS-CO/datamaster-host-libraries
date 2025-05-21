@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
 
-# Only set the cxx_standard if it is not set by someone else
 if (NOT DEFINED CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20)
 endif()
@@ -82,7 +81,11 @@ target_include_directories(
         ${PROJECT_SOURCE_DIR}/include
 )
 
-target_link_libraries(${PROJECT_NAME} etherbone ${libxml2_LIBRARIES} Boost::serialization Boost::graph lzma)
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE etherbone ${libxml2_LIBRARIES} Boost::serialization Boost::graph lzma
+    PUBLIC datamaster-common
+)
 target_compile_definitions(
     ${PROJECT_NAME}
     PRIVATE
