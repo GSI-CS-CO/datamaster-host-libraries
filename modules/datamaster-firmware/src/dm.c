@@ -52,6 +52,7 @@
 #include "prio_regs.h"
 #include "dbg.h"
 #include "ftm_shared_mmap.h"
+#include "config.h"
 
 uint64_t SHARED dummy = 0; ///< dummy using the SHARED type so nothing gets optimized away
 
@@ -276,7 +277,7 @@ uint32_t* execWait(uint32_t* node, uint32_t* cmd, uint32_t* thrData) {
   // the block period is added in blockFixed or blockAligned.
   // we must therefore subtract it here if we modify current time, as execWait is optional
 
-  uint64_t  tWait = *(uint64_t*)&cmd[T_CMD_WAIT_TIME >> 2] - *(uint64_t*)&node[BLOCK_PERIOD >> 2]; // auxiliary wait time. The block handler adds its period, so to avoid corner case, subtract period here.
+  uint64_t  tWait = *(uint64_t*)&cmd[T_CMD_WAIT_TIME / 2] - *(uint64_t*)&node[BLOCK_PERIOD >> 2]; // auxiliary wait time. The block handler adds its period, so to avoid corner case, subtract period here.
   uint64_t*  tCur = (uint64_t*)&thrData[T_TD_CURRTIME >> 2]; // current TAI in ns
   uint32_t    act = cmd[T_CMD_ACT >> 2]; // command action field
   if ( act & ACT_WAIT_ABS_SMSK) {

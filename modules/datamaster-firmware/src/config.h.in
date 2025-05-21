@@ -1,0 +1,8 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+#cmakedefine DM_RELEASE "@DM_RELEASE@"
+#cmakedefine DM_VERSION "@DM_VERSION@"
+#cmakedefine RAM_SIZE @RAM_SIZE@
+#cmakedefine INT_BASE_ADR @CONFIG_RAMADDR@
+#define _THR_QTY_ @THR_QTY@
+#endif

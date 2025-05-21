@@ -1,1 +1,4 @@
 build/
+build_host/
+build_firmware/
+out/

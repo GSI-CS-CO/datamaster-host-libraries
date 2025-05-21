@@ -8,6 +8,14 @@
             "USER_GID": "1000"
         }
     },
+    "runArgs": [
+        "--log-driver=none"
+    ],
     "remoteUser": "vscode",
-    "containerUser": "vscode"
+    "containerUser": "vscode",
+    "containerEnv": {
+        "USER": "${localEnv:USER}",
+        "BUILD_HOST": "${localEnv:HOSTNAME:-$(hostname)}"
+    }
+
 }

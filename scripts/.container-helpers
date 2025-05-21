@@ -1,0 +1,35 @@
+#!/bin/bash
+
+function is_inside_container() {
+    if grep -qE '/(lxc|docker|kubepods|libpod)' /proc/1/cgroup 2>/dev/null || \
+        [ -f /.dockerenv ] || \
+        [ -f /run/.containerenv ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function reopen_script_in_container() {
+    # Reopen the script in a new terminal window
+    if is_inside_container; then
+        echo "This script is already running inside a container."
+        return
+    fi
+
+
+    CONTAINER_RUNTIME=${CONTAINER_RUNTIME:-podman}
+
+    if ! command -v "$CONTAINER_RUNTIME" >/dev/null 2>&1
+    then
+        echo "Error: $CONTAINER_RUNTIME is not installed or not in PATH."
+        exit 1
+    fi
+    RUN_IN_CONTAINER_COMMAND="$CONTAINER_RUNTIME run --log-driver=none -v .:/workspaces/datamaster-host-build -t ftm-builder /bin/bash -c"
+
+
+    current_script=$(realpath "$0")
+
+    $RUN_IN_CONTAINER_COMMAND "cd /workspaces/datamaster-host-build && /workspaces/datamaster-host-build/scripts/$(basename "$current_script")"
+    exit 0
+}

@@ -9,6 +9,8 @@
 #include "dbg.h"
 #include "ftm_common.h"
 #include "dm.h"
+#include "config.h"
+#include "uart.h"
 
 /** \mainpage DM Firmware Documentation
  *
@@ -53,7 +55,7 @@ uint8_t cpuQty;
 /** Shows and MSI's msg, address and byte select words */
 void show_msi()
 {
-  mprintf(" Msg:\t%08x\nAdr:\t%08x\nSel:\t%01x\n", global_msi.msg, global_msi.adr, global_msi.sel);
+  pp_printf(" Msg:\t%08x\nAdr:\t%08x\nSel:\t%01x\n", global_msi.msg, global_msi.adr, global_msi.sel);
 
 }
 
@@ -61,7 +63,7 @@ void show_msi()
 /** IRQ handler 0, shows handler number and msi content on console. Not used in DM */
 void isr0()
 {
-   mprintf("ISR0\n");
+   pp_printf("ISR0\n");
    show_msi();
 }
 
@@ -69,7 +71,7 @@ void isr0()
 /** IRQ handler 1, shows handler number and msi content on console. Not used in DM */
 void isr1()
 {
-   mprintf("ISR1\n");
+   pp_printf("ISR1\n");
    show_msi();
 }
 
@@ -83,7 +85,7 @@ void ebmInit()
 
    while (*(pEbCfg + (EBC_SRC_IP>>2)) == EBC_DEFAULT_IP) {
      for (j = 0; j < (125000000/2); ++j) { asm("nop"); }
-     mprintf("#%02u: DM cores Waiting for IP from WRC...\n", cpuId);
+     pp_printf("#%02u: DM cores Waiting for IP from WRC...\n", cpuId);
    }
 
    ebm_init();
@@ -128,9 +130,9 @@ void init()
 
   while(!wrTimeValid()) {
     for (j = 0; j < (125000000/2); ++j) { asm("nop"); }
-    if (cpuId == 0) mprintf("#%02u: DM cores Waiting for WRC synchronisation...\n", cpuId);
+    if (cpuId == 0) pp_printf("#%02u: DM cores Waiting for WRC synchronisation...\n", cpuId);
   }
-  if (cpuId == 0) mprintf("#%02u: WR time now in sync\n", cpuId);
+  if (cpuId == 0) pp_printf("#%02u: WR time now in sync\n", cpuId);
 
   isr_table_clr();
   irq_set_mask(0x01);
@@ -188,22 +190,22 @@ void main(void) {
 
   atomic_on();
 
-  mprintf("#%02u: Rdy\n", cpuId);
+  pp_printf("#%02u: Rdy\n", cpuId);
   #if DEBUGLEVEL != 0
-    mprintf("#%02u: Debuglevel %u. Don't expect timeley delivery with console outputs on!\n", cpuId, DEBUGLEVEL);
+    pp_printf("#%02u: Debuglevel %u. Don't expect timeley delivery with console outputs on!\n", cpuId, DEBUGLEVEL);
   #endif
   #if DEBUGTIME == 1
-    mprintf("#%02u: Debugtime mode ON. Par Field of Msgs will be overwritten be dispatch time at lm32\n", cpuId);
+    pp_printf("#%02u: Debugtime mode ON. Par Field of Msgs will be overwritten be dispatch time at lm32\n", cpuId);
   #endif
   #if DEBUGPRIOQ == 1
-    mprintf("#%02u: Priority Queue Debugmode ON, timestamps will be written to 0x%08x on receivers", cpuId, DEBUGPRIOQDST);
+    pp_printf("#%02u: Priority Queue Debugmode ON, timestamps will be written to 0x%08x on receivers", cpuId, DEBUGPRIOQDST);
   #endif
   //mprintf("Found MsgBox at 0x%08x. MSI Path is 0x%08x\n", (uint32_t)pCpuMsiBox, (uint32_t)pMyMsi);
-  mprintf("#%02u: This is %s DM FW %s \n", cpuId, DM_RELEASE, DM_VERSION);
+  pp_printf("#%02u: This is %s DM FW %s \n", cpuId, DM_RELEASE, DM_VERSION);
 
   atomic_off();
 
-  if (getMsiBoxCpuSlot(cpuId, 0) == -1) {mprintf("#%02u: Mail box slot acquisition failed\n", cpuId);}
+  if (getMsiBoxCpuSlot(cpuId, 0) == -1) {pp_printf("#%02u: Mail box slot acquisition failed\n", cpuId);}
 
   DBPRINT1("#%02u: Base shared ram 0x%08x\n", cpuId, (uint32_t*)&_startshared);
 
