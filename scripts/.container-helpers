@@ -30,6 +30,13 @@ function reopen_script_in_container() {
 
     current_script=$(realpath "$0")
 
-    $RUN_IN_CONTAINER_COMMAND "cd /workspaces/datamaster-host-build && /workspaces/datamaster-host-build/scripts/$(basename "$current_script")"
+    $RUN_IN_CONTAINER_COMMAND "
+        export BUILD_HOST=$(hostname) && \
+        export USER=${USER} && \
+        export HOST_OS=$(uname -o) && \
+        export HOST_KRNL=$(uname -r) && \
+        cd /workspaces/datamaster-host-build && \
+        /workspaces/datamaster-host-build/scripts/$(basename "$current_script") \
+    "
     exit 0
 }
