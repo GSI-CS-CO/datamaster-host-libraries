@@ -1,0 +1,2 @@
+#cmakedefine BUILD_DATE "@BUILD_DATE@"
+#cmakedefine TOOL_VER "@TOOL_VER@"

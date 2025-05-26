@@ -1,0 +1,47 @@
+project(datamaster-tools)
+
+set(TOOL_VER "0.39.1")
+cmake_minimum_required(VERSION 3.21)
+
+string(TIMESTAMP BUILD_DATE "%Y%m%d")
+
+configure_file(
+    ${PROJECT_SOURCE_DIR}/src/config.h.in
+    config.h
+    @ONLY
+)
+
+add_executable(dm-cmd 
+    ${PROJECT_SOURCE_DIR}/src/dm-cmd.cpp
+)
+
+add_executable(dm-sched 
+    ${PROJECT_SOURCE_DIR}/src/dm-sched.cpp
+)
+
+target_link_libraries(dm-cmd 
+    PUBLIC datamaster-common
+    carpedm
+)
+
+target_include_directories(
+    dm-cmd
+    PRIVATE
+        ${PROJECT_BINARY_DIR}
+)
+
+target_include_directories(
+    dm-sched
+    PRIVATE
+        ${PROJECT_BINARY_DIR}
+)
+
+
+target_link_libraries(dm-sched 
+    PUBLIC datamaster-common
+    carpedm
+)
+
+install(
+    TARGETS dm-cmd dm-sched
+)
