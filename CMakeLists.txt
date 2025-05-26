@@ -25,4 +25,9 @@ else()
   add_subdirectory(modules/datamaster-host-libraries)
   add_subdirectory(modules/fesa-class-generator)
   add_subdirectory(modules/fesa-du-generator)
+
+  install(
+    TARGETS Generator_DU
+  )
+
 endif()
