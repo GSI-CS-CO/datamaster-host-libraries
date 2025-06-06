@@ -1,0 +1,20 @@
+pipeline {
+    agent any
+    options {
+        quietPeriod(0)
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                sh "./scripts/build.sh"
+            }
+        }
+        stage('Test') {}
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'out/dm-cmd,out/dm-sched,out/libcarpedm.*,out/replaceChain,out/ftm.bin,out/ftm.elf,out/Generator_DU', fingerprint: true
+        }
+    }
+}
