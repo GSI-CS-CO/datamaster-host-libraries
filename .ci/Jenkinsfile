@@ -10,7 +10,6 @@ pipeline {
                 sh "./scripts/build.sh"
             }
         }
-        stage('Test') {}
     }
     post {
         always {
