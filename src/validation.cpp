@@ -11,17 +11,15 @@
 namespace n = DotStr::Node::TypeVal;
 namespace e = DotStr::Edge::TypeVal;
 
+namespace {
+  Validation::children_t cNonMeta;
+}
 
 namespace Validation {
-
-
-
-  const children_t cNonMeta = {n::sTMsg, n::sCmdNoop, n::sCmdFlow, n::sOrigin, n::sStartThread, n::sSwitch, n::sCmdFlush, n::sCmdWait, n::sBlockFixed, n::sBlockAlign, n::sGlobal};
 ConstellationRule_set cRules;
 
-
-
 void init() {
+        cNonMeta = Validation::children_t({n::sTMsg, n::sCmdNoop, n::sCmdFlow, n::sOrigin, n::sStartThread, n::sSwitch, n::sCmdFlush, n::sCmdWait, n::sBlockFixed, n::sBlockAlign, n::sGlobal});
         cRules.insert(ConstellationRule(n::sTMsg,        e::sDefDst,      cNonMeta,  1, 1  ));
         cRules.insert(ConstellationRule(n::sTMsg,        e::sDynPar0,     cNonMeta,  0, 1  ));
         cRules.insert(ConstellationRule(n::sTMsg,        e::sDynPar1,     cNonMeta,  0, 1  ));

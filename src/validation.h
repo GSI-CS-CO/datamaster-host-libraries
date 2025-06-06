@@ -104,7 +104,6 @@ namespace MaxOccurrance {
   const unsigned REF    = 3;
 };
 
-extern const children_t cNonMeta;
 extern ConstellationRule_set cRules;
 
 
