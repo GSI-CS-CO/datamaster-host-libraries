@@ -1,0 +1,8 @@
+python
+import sys
+sys.path.insert(0, '/opt/sdk/sysroots/core2-64-ffos-linux/usr/share/gcc-12.2.0/python/')
+import libstdcxx.v6.printers
+libstdcxx.v6.printers.register_libstdcxx_printers(None)
+end
+
+set print pretty on

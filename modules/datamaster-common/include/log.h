@@ -1,7 +1,5 @@
 #pragma once
 
-#include "datamaster_common_export.h"
-
 #include <sstream>
 #include <boost/format.hpp>
 #include <iostream>
@@ -22,16 +20,8 @@ enum log_level_t {
 
 using namespace std;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern DATAMASTER_COMMON_EXPORT log_level_t GLOBAL_LEVEL;
-extern DATAMASTER_COMMON_EXPORT const char* const log_lvl_str[];
-
-#ifdef __cplusplus
-}
-#endif
+extern log_level_t GLOBAL_LEVEL;
+extern const char* const log_lvl_str[];
 
 namespace log_impl {
 class formatted_log_t {
@@ -43,12 +33,12 @@ public:
         // GLOBAL_LEVEL is a global variable and could be changed at runtime
         // Any customization could be here
         if ( level <= ERROR ) wcout << log_lvl_str[level] << L" " << fmt << endl;
-    }        
-    template <typename T> 
+    }
+    template <typename T>
     formatted_log_t& operator %(T value) {
         fmt % value;
         return *this;
-    }    
+    }
 protected:
     boost::wformat  fmt;
     log_level_t     level;

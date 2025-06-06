@@ -8,9 +8,13 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "pytest (>=8.3.5,<9.0.0)"
+    "pytest (>=8.3.5,<9.0.0)",
+    "behave (>=1.2.6,<2.0.0)",
+    "pexpect (>=4.9.0,<5.0.0)",
+    "structlog (>=25.4.0,<26.0.0)",
+    "labgrid (>=25.0,<26.0)",
+    "better-exceptions (>=0.3.3,<0.4.0)"
 ]
-
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

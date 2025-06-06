@@ -1,0 +1,13 @@
+<testsuite name="full_schedules.Full Schedules" tests="1" errors="0" failures="0" skipped="1" time="0.0" timestamp="2025-06-06T12:16:44.722154" hostname="31491d975ba8"><testcase classname="full_schedules.Full Schedules" name="2024-10-02 Schedule" status="untested" time="0"><skipped /><system-out>
+<![CDATA[
+@scenario.begin
+  Scenario: 2024-10-02 Schedule
+    Given we add schedules ... untested in 0.000s
+      | name                    |
+      | 2024-10-02-schedule-int |
+    Then the device should have the schedule 2024-10-02-schedule-int ... untested in 0.000s
+
+@scenario.end
+--------------------------------------------------------------------------------
+]]>
+</system-out></testcase></testsuite>

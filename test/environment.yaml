@@ -1,0 +1,17 @@
+targets:
+  datamaster:
+    resources:
+      RemotePlace:
+        name: 'datamaster'
+    drivers:
+      SSHDriver:
+        username: root
+        password: geheim
+  datamaster2:
+    resources:
+      RemotePlace:
+        name: 'datamaster2'
+    drivers:
+      SSHDriver:
+        username: root
+        password: geheim

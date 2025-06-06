@@ -1,0 +1,20 @@
+namespace datamaster.firmware;
+
+table Metadata {
+    project:string;
+    version:string;
+    platform:string;
+    build_date:string;
+    prepared_by:string;
+    prepared_on:string;
+    os_version:string;
+    gcc_version:string;
+    int_addr_offs:string;
+    shared_offs:string;
+    shared_size:string;
+    thread_qty:string;
+    git_info:[string];
+    git_branch:string;
+}
+
+root_type Metadata;

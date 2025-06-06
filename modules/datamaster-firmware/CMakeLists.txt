@@ -31,7 +31,7 @@ set(CBR_KRNL "" CACHE STRING "Kernel version")
 set(CBR_GCC ${CMAKE_C_COMPILER_VERSION} CACHE STRING "GCC version")
 set(CONFIG_RAMADDR "0x10000000" CACHE STRING "RAM address offset")
 set(INT_BASE_ADR ${CONFIG_RAMADDR} CACHE STRING "INT base address")
-set(SHARED_START "" CACHE STRING "Shared memory offset")
+set(SHARED_START "0x500" CACHE STRING "Shared memory offset")
 set(SHARED_SIZE "" CACHE STRING "Shared memory size")
 set(THR_QTY "32" CACHE STRING "Thread quantity" )
 set(GIT_LOG "" CACHE STRING "Git log")
@@ -146,7 +146,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(
     ${PROJECT_NAME}
-    PRIVATE datamaster-common_INTERFACE
+    PRIVATE datamaster-common
     gcc
     c
 )
