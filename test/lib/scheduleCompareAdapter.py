@@ -1,18 +1,18 @@
-from pexpect import spawn, EOF
-from typing import IO
+
+from enum import IntEnum
 from test.features.device_config import DUT
 
 import logging
 logger = logging.getLogger(__name__)
 
 # enum for compare flags
-class CompareFlags:
-    NONE = 0
-    VERBOSE = 1
-    IGNORE_NAMES = 2
-    CHECK = 4
-    UNDEFINED_AS_EMPTY = 8
-    TEST = 16
+class CompareFlags(IntEnum):
+    NONE = int('0000000', 2)
+    VERBOSE = int('0000001', 2)
+    IGNORE_NAMES = int('0000010', 2)
+    CHECK = int('0000100', 2)
+    UNDEFINED_AS_EMPTY = int('0001000', 2)
+    TEST = int('0010000', 2)
 
 
 class scheduleCompareAdapter:
@@ -51,3 +51,4 @@ class scheduleCompareAdapter:
         result = self.__dut.run_command("/tmp/test/scheduleCompare " + " ".join(args) + " " + schedule1 + " " + schedule2)
 
         logger.info(f"Comparison result: {result}")
+        return True

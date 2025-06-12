@@ -4,3 +4,5 @@ build_firmware/
 out/
 bin/
 .vscode-server
+__pycache__/
+*.py[cod]

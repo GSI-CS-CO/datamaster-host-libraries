@@ -1,4 +1,4 @@
-FROM localhost/ftm-builder:latest as builder
+FROM 192.168.1.100:5000/timing/ftm-builder:latest as builder
 # Install dev tools
 RUN apt-get update && \
     apt-get install -y \

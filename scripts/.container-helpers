@@ -18,14 +18,14 @@ function reopen_script_in_container() {
     fi
 
 
-    CONTAINER_RUNTIME=${CONTAINER_RUNTIME:-podman}
+    CONTAINER_RUNTIME=${CONTAINER_RUNTIME:-docker}
 
     if ! command -v "$CONTAINER_RUNTIME" >/dev/null 2>&1
     then
         echo "Error: $CONTAINER_RUNTIME is not installed or not in PATH."
         exit 1
     fi
-    RUN_IN_CONTAINER_COMMAND="$CONTAINER_RUNTIME run --log-driver=none -v .:/workspaces/datamaster-host-build -t ftm-builder /bin/bash -c"
+    RUN_IN_CONTAINER_COMMAND="$CONTAINER_RUNTIME run --log-driver=none -v .:/workspaces/datamaster-host-build -t 192.168.1.100:5000/timing/ftm-builder /bin/bash -c"
 
 
     current_script=$(realpath "$0")
