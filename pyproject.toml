@@ -3,7 +3,7 @@ name = "datamaster-host-build"
 version = "9.0.0"
 description = ""
 authors = [
-    {name = "Your Name",email = "you@example.com"}
+    {name = "Marco Dennstädt",email = "M.Dennstaedt@gsi.de"}
 ]
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,7 +13,9 @@ dependencies = [
     "pexpect (>=4.9.0,<5.0.0)",
     "structlog (>=25.4.0,<26.0.0)",
     "labgrid (>=25.0,<26.0)",
-    "better-exceptions (>=0.3.3,<0.4.0)"
+    "better-exceptions (>=0.3.3,<0.4.0)",
+    "pydot (>=4.0.0,<5.0.0)",
+    "jinja2 (>=3.1.6,<4.0.0)"
 ]
 
 [build-system]
