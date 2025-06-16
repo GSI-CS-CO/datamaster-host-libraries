@@ -8,9 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(BUILD_FIRMWARE OFF CACHE BOOL "Build firmware? If false, host libraries are built")
 
-# set( CMAKE_VERBOSE_MAKEFILE on )
 
-# set output directory to ${PROJECT_SOURCE_DIR}/out
 
 if(${BUILD_FIRMWARE})
 
@@ -34,6 +32,12 @@ elseif(${BUILD_HOST})
   # no fesa here, if you want to pollute your beautiful system with that crap...HOW ABOUT NO
   add_subdirectory(modules/datamaster-tools)
   add_subdirectory(test/test_programs)
+
+
+  if(ENABLE_TESTS)
+    add_subdirectory(test/unit)
+  endif()
+
 else()
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
   add_compile_options(-g -O0 -fno-omit-frame-pointer)
