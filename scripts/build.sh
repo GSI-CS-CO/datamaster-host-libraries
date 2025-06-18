@@ -1,16 +1,17 @@
 #!/bin/bash
+set -e
+# This script builds the host tools and firmware for the target device.
+# It is intended to be run inside a container that has the necessary build environment set up.
 
 # shellcheck source=./.container-helpers
 . "$(dirname "$0")/.container-helpers"
 
-#if ! is_inside_container; then
-    echo "BUILDING DEV TOOLS"
-    exec 3>&1 4>&2
-    exec > >(sed 's/^/[DEV TOOLS] /') 2>&1
-    cmake -B ./build/build_dev/ -DBUILD_HOST=ON
-    cmake --build build/build_dev -- -j
-    exec 1>&3 2>&4
-#fi
+echo "BUILDING DEV TOOLS"
+exec 3>&1 4>&2
+exec > >(sed 's/^/[DEV TOOLS] /') 2>&1
+cmake -B ./build/build_dev/ -DBUILD_HOST=ON -G Ninja
+cmake --build build/build_dev
+exec 1>&3 2>&4
 
 reopen_script_in_container
 
@@ -23,8 +24,9 @@ exec > >(sed 's/^/[TARGET HOST] /') 2>&1
 
 echo "BUILDING HOST TOOLS"
 cmake -B ./build/build_host/ \
-    --toolchain "${OE_CMAKE_TOOLCHAIN_FILE}"
-cmake --build build/build_host -- -j
+    --toolchain "${OE_CMAKE_TOOLCHAIN_FILE}" \
+     -G Ninja
+cmake --build build/build_host
 
 
 exec 1>&3 2>&4
@@ -54,7 +56,7 @@ cmake -B ./build/build_firmware/ \
     -DCBR_GIT4="$CBR_GIT4" \
     -DCBR_GIT5="$CBR_GIT5"
 
-cmake --build build/build_firmware -j
+cmake --build build/build_firmware
 
 exec 1>&3 2>&4
 

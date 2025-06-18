@@ -38,6 +38,8 @@ elseif(${BUILD_HOST})
     add_subdirectory(test/unit)
   endif()
 
+  include(CPack)
+
 else()
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
   add_compile_options(-g -O0 -fno-omit-frame-pointer)

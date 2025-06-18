@@ -9,7 +9,7 @@
             "request": "attach",
             "name": "Attach to gdbserver",
             "executable": "${workspaceRoot}/out/dm-sched",
-            "target": "192.168.1.202:2345",
+            "target": "192.168.1.101:2345",
             "remote": true,
             "cwd": "${workspaceRoot}",
             "gdbpath": "/usr/bin/gdb",

@@ -3,6 +3,8 @@ project(datamaster-tools)
 set(TOOL_VER "0.39.1")
 cmake_minimum_required(VERSION 3.21)
 
+find_package(Boost COMPONENTS program_options REQUIRED)
+
 string(TIMESTAMP BUILD_DATE "%Y%m%d")
 
 configure_file(
@@ -42,6 +44,21 @@ target_link_libraries(dm-sched
     carpedm
 )
 
+add_executable(dm-validate 
+    ${PROJECT_SOURCE_DIR}/src/dm-validate.cpp
+)
+
+target_link_libraries(dm-validate 
+    PUBLIC datamaster-common
+    carpedm
+   ${Boost_LIBRARIES}
+)
+target_include_directories(
+    dm-validate
+    PRIVATE
+        ${PROJECT_BINARY_DIR}
+)
+
 install(
-    TARGETS dm-cmd dm-sched
+    TARGETS dm-cmd dm-sched dm-validate
 )

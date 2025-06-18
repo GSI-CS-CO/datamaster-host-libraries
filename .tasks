@@ -1,3 +1,7 @@
 [build]
 command=./scripts/build.sh
 cwd=$(VIM_CWD)
+
+[test]
+command=./scripts/build.sh; ./bin/datamaster_tests
+cwd=$(VIM_CWD)

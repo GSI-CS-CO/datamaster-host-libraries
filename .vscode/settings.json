@@ -79,6 +79,13 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
-    }
+        "variant": "cpp",
+        "forward_list": "cpp",
+        "regex": "cpp",
+        "span": "cpp",
+        "*.inc": "cpp"
+    },
+    "testMate.cpp.test.executables": "bin/datamaster_tests",
+    "terminal.integrated.shellIntegration.enabled": false,
+    "terminal.integrated.gpuAcceleration": "canvas"
 }

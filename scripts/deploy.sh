@@ -30,6 +30,9 @@ for i in $(seq 0 3); do
     ssh -o StrictHostKeyChecking=no "root@${HOST}" "eb-fwload dev/wbm0 u$i 0 /firmware/ftm.bin"
 done
 
+echo "Resetting cpu..."
+ssh -o StrictHostKeyChecking=no "root@${HOST}" "eb-reset dev/wbm0 cpureset 0xff"
+
 ssh -o StrictHostKeyChecking=no "root@${HOST}" "eb-info dev/wbm0"
 ssh -o StrictHostKeyChecking=no "root@${HOST}" "eb-info -w dev/wbm0"
 

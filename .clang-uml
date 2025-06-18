@@ -1,0 +1,9 @@
+compilation_database_dir: build/build_dev
+output_directory: diagrams
+diagrams:
+  carpeDM_class:
+    type: class
+    glob:
+      - /workspaces/datamaster-host-build/modules/datamaster-host-libraries/src/*
+
+
