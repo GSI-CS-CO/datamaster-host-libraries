@@ -35,7 +35,8 @@ namespace dnt = DotStr::Node::TypeVal;
     else { 
       uint32_t rtAdr = adrConv(AdrType::MGMT, AdrType::INT, cpu, adr);
       //std::cout << "Global for adr 0x" << std::hex << adr << " goes down to rt as 0x" << std::hex << rtAdr << std::endl;
-      rt->insert(rtAdr, hash);}
+      rt->insert(rtAdr, hash);
+    }
     auto x = a.insert({cpu, adr, hash, v, staged, global});
 
     return x.second;
@@ -286,9 +287,7 @@ namespace dnt = DotStr::Node::TypeVal;
       //std::cout << "cpu idx out of range" << std::endl;
       return false;}
 
-    if (!(vPool[x->cpu].freeChunk(x->adr))) {
-      //std::cout << "Chunk" << std::endl;
-      return false;}
+    vPool[x->cpu].freeChunk(x->adr);
     if (!(removeByHash(hash))) {
       //std::cout << "AT Hash" << std::endl;
       return false;}

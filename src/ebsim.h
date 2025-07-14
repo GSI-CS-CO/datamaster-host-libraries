@@ -1,7 +1,7 @@
 #include "ebwrapper.h"
 
 
-class EbSim : public EbWrapper {
+Class EbSim public EbWrapper {
 
 private:
 
@@ -18,10 +18,10 @@ public:
   ~EbSim()  {};
   bool connect();
   bool disconnect(); //Close connection
-  int writeCycle(const vEbwrs& ew);
+  int writeCycle(const ebWrs& ew);
   int writeCycle(vAdr va, vBuf& vb, vBl vcs);
   int writeCycle(vAdr va, vBuf& vb);
-  vBuf readCycle(const vEbrds& er);
+  vBuf readCycle(const ebRds& er);
   vBuf readCycle(vAdr va, vBl vcs);
   vBuf readCycle(vAdr va );
   uint32_t read32b(uint32_t adr);

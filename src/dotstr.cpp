@@ -8,6 +8,10 @@ namespace DotStr {
       const std::string sCurThr     = "currentThread";
       const std::string sCurNode    = "currentNode";
       const std::string sRegisters  = "registers";
+      const std::string sThrCtl     = "threadControl";
+      const std::string sThrStaging = "threadStaging";
+      const std::string sThrData    = "threadData";
+      const std::string sThrStart   = "threadStart";
     }
     namespace fields {
       const std::string sThrTB      = "threadTimebase";
@@ -98,7 +102,6 @@ namespace DotStr {
   namespace Node {
     namespace Special {
       const std::string sIdle         = "idle"; // the 'idle' target means safely stopping a thread/pattern
-
     }
     // node properties
     namespace Prop {

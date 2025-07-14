@@ -17,7 +17,7 @@
 #include "idformat.h"
 #include "lzmaCompression.h"
 #include "ebwrapper.h"
- #include "log.h"
+#include "log.h"
 
 
   CarpeDM::CarpeDMimpl::CarpeDMimpl()                                        : sLog(std::cout),  sErr(std::cerr) {Validation::init();}

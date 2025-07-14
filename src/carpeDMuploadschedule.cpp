@@ -315,6 +315,9 @@ using namespace DotStr::Misc;
           throw std::runtime_error( "Parser error when processing pattern/BP entry/exit tags of node <" + name + ">. Cause: " + err.what());
         }
 
+        if(hash == 0x938ca2f2) { 
+          atUp.debug(std::cout);
+        }
         amI it = atUp.lookupHashNoEx(hash); //if we already have a download entry, keep allocation, but update vertex index
         if (!atUp.isOk(it)) {
           //sLog << "Adding " << name << std::endl;
@@ -327,7 +330,7 @@ using namespace DotStr::Misc;
 
         //TODO Find something better than stupic cast to ptr
         //Ugly as hell. But otherwise the bloody iterator will only allow access to MY alloc buffers (not their pointers!) as const!
-        auto* x = (AllocMeta*)&(*it);
+        const auto& x = *it;
 
         try{
         // add timing node data objects to vertices
@@ -337,23 +340,23 @@ using namespace DotStr::Misc;
 
               // TODO most of this shit should be in constructor
                if (cmp == dnt::sTMsg)        {completeId(v, gUp); // create ID from SubId fields or vice versa
-                                              gUp[v].np = (node_ptr) new  TimingMsg(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].id), s2u<uint64_t>(gUp[v].par), s2u<uint32_t>(gUp[v].tef), s2u<uint32_t>(gUp[v].res)); }
-          else if (cmp == dnt::sCmdNoop)     {gUp[v].np = (node_ptr) new       Noop(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].tValid), s2u<uint8_t>(gUp[v].prio), s2u<uint32_t>(gUp[v].qty), s2u<bool>(gUp[v].vabs)); }
-          else if (cmp == dnt::sCmdFlow)     {gUp[v].np = (node_ptr) new       Flow(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].tValid), s2u<uint8_t>(gUp[v].prio), s2u<uint32_t>(gUp[v].qty), s2u<bool>(gUp[v].vabs), s2u<bool>(gUp[v].perma)); }
-          else if (cmp == dnt::sSwitch)      {gUp[v].np = (node_ptr) new     Switch(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tOffs) ); }
-          else if (cmp == dnt::sOrigin)      {gUp[v].np = (node_ptr) new     Origin(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint8_t>(gUp[v].thread)); }
-          else if (cmp == dnt::sStartThread) {gUp[v].np = (node_ptr) new     StartThread(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].startOffs), s2u<uint32_t>(gUp[v].thread)); }
-          else if (cmp == dnt::sCmdFlush)    {gUp[v].np = (node_ptr) new      Flush(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].tValid), s2u<uint8_t>(gUp[v].prio),
+                                              gUp[v].np = (node_ptr) new  TimingMsg(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].id), s2u<uint64_t>(gUp[v].par), s2u<uint32_t>(gUp[v].tef), s2u<uint32_t>(gUp[v].res)); }
+          else if (cmp == dnt::sCmdNoop)     {gUp[v].np = (node_ptr) new       Noop(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].tValid), s2u<uint8_t>(gUp[v].prio), s2u<uint32_t>(gUp[v].qty), s2u<bool>(gUp[v].vabs)); }
+          else if (cmp == dnt::sSwitch)      {gUp[v].np = (node_ptr) new     Switch(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tOffs) ); }
+          else if (cmp == dnt::sOrigin)      {gUp[v].np = (node_ptr) new     Origin(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint8_t>(gUp[v].thread)); }
+          else if (cmp == dnt::sCmdFlow)     {gUp[v].np = (node_ptr) new       Flow(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].tValid), s2u<uint8_t>(gUp[v].prio), s2u<uint32_t>(gUp[v].qty), s2u<bool>(gUp[v].vabs), s2u<bool>(gUp[v].perma)); }
+          else if (cmp == dnt::sStartThread) {gUp[v].np = (node_ptr) new     StartThread(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].startOffs), s2u<uint32_t>(gUp[v].thread)); }
+          else if (cmp == dnt::sCmdFlush)    {gUp[v].np = (node_ptr) new      Flush(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].tValid), s2u<uint8_t>(gUp[v].prio),
                                                                                 s2u<bool>(gUp[v].qIl), s2u<bool>(gUp[v].qHi), s2u<bool>(gUp[v].qLo), s2u<bool>(gUp[v].vabs), s2u<bool>(gUp[v].perma), s2u<uint8_t>(gUp[v].frmIl), s2u<uint8_t>(gUp[v].toIl), s2u<uint8_t>(gUp[v].frmHi),
                                                                                 s2u<uint8_t>(gUp[v].toHi), s2u<uint8_t>(gUp[v].frmLo), s2u<uint8_t>(gUp[v].toLo) ); }
-          else if (cmp == dnt::sCmdWait)     {gUp[v].np = (node_ptr) new       Wait(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].tValid), s2u<uint8_t>(gUp[v].prio), s2u<uint64_t>(gUp[v].tWait), s2u<bool>(gUp[v].vabs)); }
-          else if (cmp == dnt::sBlock)       {gUp[v].np = (node_ptr) new BlockFixed(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tPeriod) ); }
-          else if (cmp == dnt::sBlockFixed)  {gUp[v].np = (node_ptr) new BlockFixed(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tPeriod) ); }
-          else if (cmp == dnt::sBlockAlign)  {gUp[v].np = (node_ptr) new BlockAlign(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, s2u<uint64_t>(gUp[v].tPeriod) ); }
-          else if (cmp == dnt::sQInfo)       {gUp[v].np = (node_ptr) new   CmdQMeta(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags);}
-          else if (cmp == dnt::sDstList)     {gUp[v].np = (node_ptr) new   DestList(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags);}
-          else if (cmp == dnt::sQBuf)        {gUp[v].np = (node_ptr) new CmdQBuffer(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags);}
-          else if (cmp == dnt::sGlobal)      {gUp[v].np = (node_ptr) new     Global(gUp[v].name, gUp[v].patName, gUp[v].bpName, x->hash, x->cpu, flags, gUp[v].section);}
+          else if (cmp == dnt::sCmdWait)     {gUp[v].np = (node_ptr) new       Wait(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tOffs), s2u<uint64_t>(gUp[v].tValid), s2u<uint8_t>(gUp[v].prio), s2u<uint64_t>(gUp[v].tWait), s2u<bool>(gUp[v].vabs)); }
+          else if (cmp == dnt::sBlock)       {gUp[v].np = (node_ptr) new BlockFixed(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tPeriod) ); }
+          else if (cmp == dnt::sBlockFixed)  {gUp[v].np = (node_ptr) new BlockFixed(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tPeriod) ); }
+          else if (cmp == dnt::sBlockAlign)  {gUp[v].np = (node_ptr) new BlockAlign(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, s2u<uint64_t>(gUp[v].tPeriod) ); }
+          else if (cmp == dnt::sQInfo)       {gUp[v].np = (node_ptr) new   CmdQMeta(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags);}
+          else if (cmp == dnt::sDstList)     {gUp[v].np = (node_ptr) new   DestList(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags);}
+          else if (cmp == dnt::sQBuf)        {gUp[v].np = (node_ptr) new CmdQBuffer(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags);}
+          else if (cmp == dnt::sGlobal)      {gUp[v].np = (node_ptr) new     Global(gUp[v].name, gUp[v].patName, gUp[v].bpName, x.hash, x.cpu, flags, gUp[v].section);}
           else if (cmp == dnt::sMeta)        {throw std::runtime_error("Pure meta type not yet implemented"); return;}
           //FIXME try to get info from download
           else                        {throw std::runtime_error("Node <" + gUp[v].name + ">'s type <" + cmp + "> is not supported!\nMost likely you forgot to set the type attribute or accidentally created the node by a typo in an edge definition."); return;}
@@ -583,9 +586,11 @@ using namespace DotStr::Misc;
       }
     }
     log<VERBOSE>(L"subtraction: updating staging");
+
     //FIXME Square complexity, but unsure if inner loop can be replaced
     //check staging, vertices might have lost children
     for(auto& vd : toDelete ) {
+      sLog <<  "Removing Node " << gUp[vertexMap[vd]].name << std::endl;
       //check out all parents (sources) of this to be deleted node, update their staging
       Graph::in_edge_iterator in_begin, in_end, in_cur;
 
@@ -601,8 +606,13 @@ using namespace DotStr::Misc;
     //remove designated vertices
     log<VERBOSE>(L"subtraction: removing designated nodes");
     for(auto& vd : toDelete ) {
+      sLog <<  "Removing Node " << gUp[vertexMap[vd]].name << std::endl;
+      sLog << "Before \n";
+      atUp.debug(std::cout);
       //sLog <<  "Removing Node " << gUp[vertexMap[vd]].name << std::endl;
       atUp.deallocate(gUp[vertexMap[vd]].hash); //using the hash is independent of vertex descriptors, so no remapping necessary yet
+      sLog << "After \n";
+      atUp.debug(std::cout);
       //remove node from hash and groups dict
       log<DEBUG_LVL0>(L"subtraction: removing %1%") % gUp[vertexMap[vd]].name.c_str();
       hm.remove(gUp[vertexMap[vd]].name);

@@ -38,6 +38,7 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/src/lockmanager.cpp
     ${PROJECT_SOURCE_DIR}/src/carpeDMcommand.cpp
     ${PROJECT_SOURCE_DIR}/src/carpeDMuploadschedule.cpp
+    ${PROJECT_SOURCE_DIR}/src/graphNodes.cpp
     # ${PROJECT_SOURCE_DIR}/src/ebsim.cpp
     ${PROJECT_SOURCE_DIR}/src/blocklock.cpp
     ${PROJECT_SOURCE_DIR}/src/lzmaCompression.cpp

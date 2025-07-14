@@ -13,7 +13,6 @@
 #include <boost/multi_index/composite_key.hpp>
 #include "graph.h"
 #include "common.h"
-#include "alloctable.h"
 
 //Multimap for node pair validation
 namespace Validation {
@@ -104,6 +103,7 @@ namespace MaxOccurrance {
   const unsigned REF    = 3;
 };
 
+extern const children_t cNonMeta;
 extern ConstellationRule_set cRules;
 
 
