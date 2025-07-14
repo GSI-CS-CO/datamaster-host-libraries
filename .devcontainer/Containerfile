@@ -17,7 +17,8 @@ RUN apt-get update && \
     libxml2-dev \
     clang-format  \
     ninja-build \
-    cloc
+    cloc \
+    meld
 
 ARG USER_UID=1000
 ARG USER_GID=1000

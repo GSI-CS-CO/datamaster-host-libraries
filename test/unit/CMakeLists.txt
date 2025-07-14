@@ -15,8 +15,9 @@ find_package(Boost REQUIRED COMPONENTS serialization graph)
 enable_testing()
 
 add_executable(${PROJECT_NAME}
-    ${PROJECT_SOURCE_DIR}/src/main.cpp
-    ${PROJECT_SOURCE_DIR}/src/validation.cpp
+    ${PROJECT_SOURCE_DIR}/src/testValidation.cpp
+    ${PROJECT_SOURCE_DIR}/src/graphHelper.cpp
+    ${PROJECT_SOURCE_DIR}/src/timingMessageIdMapping.cpp
 )
 
 target_link_libraries(

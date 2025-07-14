@@ -25,5 +25,4 @@
         "source=/usr/local/lib/libetherbone.so.5,target=/usr/lib/libetherbone.so.5,type=bind,consistency=cached",
         "source=/usr/local/include/etherbone.h,target=/usr/include/etherbone.h,type=bind,consistency=cached"
     ]
-
-}
+}q

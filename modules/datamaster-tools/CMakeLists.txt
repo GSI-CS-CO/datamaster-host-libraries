@@ -3,7 +3,7 @@ project(datamaster-tools)
 set(TOOL_VER "0.39.1")
 cmake_minimum_required(VERSION 3.21)
 
-find_package(Boost COMPONENTS program_options REQUIRED)
+find_package(Boost COMPONENTS program_options serialization REQUIRED)
 
 string(TIMESTAMP BUILD_DATE "%Y%m%d")
 
@@ -59,6 +59,21 @@ target_include_directories(
         ${PROJECT_BINARY_DIR}
 )
 
+add_executable(dm-reduce 
+    ${PROJECT_SOURCE_DIR}/src/dm-reduce.cpp
+)
+
+target_link_libraries(dm-reduce 
+    PUBLIC datamaster-common
+    carpedm
+   ${Boost_LIBRARIES}
+)
+target_include_directories(
+    dm-reduce
+    PRIVATE
+        ${PROJECT_BINARY_DIR}
+)
+
 install(
-    TARGETS dm-cmd dm-sched dm-validate
+    TARGETS dm-cmd dm-sched dm-validate dm-reduce
 )

@@ -1,3 +1,7 @@
 #!/bin/bash
+set -e
 
-podman run  --log-driver=none -v .:/workspaces/datamaster-host-build -it ftm-builder /bin/bash
+# shellcheck source=./.container-helpers
+. "$(dirname "$0")/.container-helpers"
+
+bash_in_container

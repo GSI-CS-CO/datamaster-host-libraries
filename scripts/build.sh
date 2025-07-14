@@ -9,7 +9,7 @@ set -e
 echo "BUILDING DEV TOOLS"
 exec 3>&1 4>&2
 exec > >(sed 's/^/[DEV TOOLS] /') 2>&1
-cmake -B ./build/build_dev/ -DBUILD_HOST=ON -G Ninja
+cmake -B ./build/build_dev/ -DBUILD_HOST=ON -G Ninja -DENABLE_TESTS=ON
 cmake --build build/build_dev
 exec 1>&3 2>&4
 

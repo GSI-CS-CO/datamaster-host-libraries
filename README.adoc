@@ -23,12 +23,14 @@ To work with the project convenience scripts are provided in `./scripts`
 |out | Folder that will contain binaries for the target system
 |scripts | Several scripts that help interacting with this repo
 |test | Tests
-|toolchains | CMake toolchain files required to build this project
+|toolchains | CMake toolchain files required to build this project:w
+
 |===
 
 == Build requirements
 * Docker
-* vscode + devcontainer extension
+* vscode + devcontainer extension (Recommended)
+* Access to the datamaster lab setup or a container registry with the datamaster build image
 
 
 == FAQ
@@ -40,5 +42,40 @@ https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials
 ** See https://git.acc.gsi.de/timing/datamaster-yocto
 ** To get this working, adjustments had to be done in scripts/_build.sh
 ** The next SDK may include a compatible boost version which will make this step obsolete
-* Missing Config scripts for projects
+* The devcontainer contains development tools that are not part of the build image yet
 * Container Registry is not available so it has to be locally built
+
+== Getting started
+
+1. Install Docker or Podman
+2. Install vscode and the devcontainer extension (this is optional, but recommended)
+3. Clone the repository
+4. Open the repository in vscode
+5. Open the command palette (Ctrl+Shift+P) and select "Dev Containers: Reopen in Container"
+6. Wait for the container to build and start
+7. Run the scripts to e.g. build the project:
+   * `./scripts/build.sh` to build the project
+
+== Tests
+=== Unit Tests
+Unit tests are provided in the `test/unit` directory. The tests are built as part of the CMake build process and can be run after the build is complete.
+To run the unit tests, you can use the following command after the project has been built:
+
+* `./bin/datamaster_unit_tests` (This will run the built unit tests)
+
+=== System Tests
+System tests are provided in the `test/features` directory. These tests are designed to verify the functionality of the system as a whole.
+To run the system tests, you can use the following command after the project has been built:
+
+* `poetry sync` (This will install the required Python dependencies)
+* `poetry run behave test/features/` (This will run the system tests using Behave)
+
+
+== Error messages and their solutions
+
+=== CMake Error: The current CMakeCache.txt directory is different than the directory where CMakeCache.txt was created
+This error occurs when the CMakeCache.txt file is not in sync with the current build directory. To resolve this, you can either:
+
+* Delete the `build` directory and re-run the build script.
+* Rerun the script from within the same environment that you've been using before - e.g. when CMakeCache has been created with devcontainer, make sure to run the script inside the devcontainer.
+

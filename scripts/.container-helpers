@@ -10,6 +10,18 @@ function is_inside_container() {
     fi
 }
 
+function bash_in_container() {
+    CONTAINER_RUNTIME=${CONTAINER_RUNTIME:-docker}
+
+    if ! command -v "$CONTAINER_RUNTIME" >/dev/null 2>&1
+    then
+        echo "Error: $CONTAINER_RUNTIME is not installed or not in PATH."
+        exit 1
+    fi
+    RUN_IN_CONTAINER_COMMAND="$CONTAINER_RUNTIME run --log-driver=none -v .:/workspaces/datamaster-host-build -t 192.168.1.100:5000/timing/ftm-builder /bin/bash"
+    $RUN_IN_CONTAINER_COMMAND
+}
+
 function reopen_script_in_container() {
     # Reopen the script in a new terminal window
     if is_inside_container; then
