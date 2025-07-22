@@ -6,14 +6,14 @@ set -e
 # shellcheck source=./.container-helpers
 . "$(dirname "$0")/.container-helpers"
 
+reopen_script_in_container
+
 echo "BUILDING DEV TOOLS"
 exec 3>&1 4>&2
 exec > >(sed 's/^/[DEV TOOLS] /') 2>&1
 cmake -B ./build/build_dev/ -DBUILD_HOST=ON -G Ninja -DENABLE_TESTS=ON
 cmake --build build/build_dev
 exec 1>&3 2>&4
-
-reopen_script_in_container
 
 # shellcheck source=/dev/null
 . /opt/sdk/environment-setup-core2-64-ffos-linux
@@ -39,11 +39,15 @@ CBR_GIT5=$(git log HEAD~4 --oneline --decorate=no -n 1 2>/dev/null | cut -c1-100
 
 exec 3>&1 4>&2
 exec > >(sed 's/^/[TARGET FIRMWARE] /') 2>&1
+git config --global --add safe.directory /workspaces/datamaster-host-build
+
+CBR_USR="$(git log -1 --pretty=format:'%an' | iconv -f utf-8 -t ascii//translit)"
+echo "Building firmware for target device with user: $CBR_USR"
 
 cmake -B ./build/build_firmware/ \
     --toolchain ./toolchains/lm32.cmake \
     -DBUILD_FIRMWARE=ON \
-    -DCBR_USR="$(git log -1 --pretty=format:'%an' | iconv -f utf-8 -t ascii//translit)" \
+    -DCBR_USR="$CBR_USR" \
     -DCBR_MAIL="$(git log -1 --pretty=format:'%ae')" \
     -DCBR_HOST="$BUILD_HOST" \
     -DCBR_OS="$(uname -o)" \

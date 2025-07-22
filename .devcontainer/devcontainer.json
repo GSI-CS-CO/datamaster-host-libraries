@@ -20,9 +20,5 @@
     "mounts": [
         "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
         "source=${localWorkspaceFolder}/.vscode-server/extensions,target=/home/vscode/.vscode-server/extensions,type=bind,consistency=cached",
-        "source=/usr/local/lib/pkgconfig/etherbone.pc,target=/usr/lib/pkgconfig/etherbone.pc,type=bind,consistency=cached",
-        "source=/usr/local/lib/libetherbone.so,target=/usr/lib/libetherbone.so,type=bind,consistency=cached",
-        "source=/usr/local/lib/libetherbone.so.5,target=/usr/lib/libetherbone.so.5,type=bind,consistency=cached",
-        "source=/usr/local/include/etherbone.h,target=/usr/include/etherbone.h,type=bind,consistency=cached"
     ]
-}q
+}

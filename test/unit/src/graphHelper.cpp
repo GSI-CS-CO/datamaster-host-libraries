@@ -13,7 +13,7 @@ constexpr uint32_t flags = 0;
 
 myVertex makeNode(const std::string& name, const std::string& type) {
   uint32_t hash = std::hash<std::string>()(name + type);
-  auto np = boost::make_shared<BlockFixed>(name, pattern, beamproc, hash, cpu, flags);
+  auto np = std::make_shared<BlockFixed>(name, pattern, beamproc, hash, cpu, flags);
   myVertex newNode;
   newNode.name = name;
   newNode.type = type;
