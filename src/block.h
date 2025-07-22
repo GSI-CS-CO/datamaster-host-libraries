@@ -56,7 +56,7 @@ public:
   node_ptr clone() const override {
     //node_ptr tmp = (node_ptr)( new BlockFixed(*this));
     //  std::cout << "BlockFixed Clone " << this->name << "this: " << this << " cpy " << tmp << std::endl;
-    return boost::make_shared<BlockFixed>(BlockFixed(*this));
+    return std::make_shared<BlockFixed>(BlockFixed(*this));
   }
   virtual void accept(const VisitorVertexWriter& v)     const override { v.visit(*this); }
   virtual void accept(const VisitorUploadCrawler& v)    const override { v.visit(*this); }
@@ -77,7 +77,7 @@ public:
   BlockAlign(const BlockAlign& src) : Block(src) {}
   node_ptr clone() const override {
     //std::cout << "BlockAlign Clone " << this->name << std::endl;
-    return boost::make_shared<BlockAlign>(BlockAlign(*this));
+    return std::make_shared<BlockAlign>(BlockAlign(*this));
   }
   virtual void accept(const VisitorVertexWriter& v)     const override { v.visit(*this); }
   virtual void accept(const VisitorUploadCrawler& v)    const override { v.visit(*this); }

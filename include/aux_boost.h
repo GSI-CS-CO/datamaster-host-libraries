@@ -82,7 +82,7 @@
 class Node;
 class MiniCommand;
 
-typedef boost::shared_ptr<Node> node_ptr;
+typedef std::shared_ptr<Node> node_ptr;
 typedef boost::shared_ptr<MiniCommand> mc_ptr;
 typedef std::vector<node_ptr> npBuf;
 

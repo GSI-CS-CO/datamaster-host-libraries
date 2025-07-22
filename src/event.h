@@ -54,7 +54,7 @@ public:
   //  std::cout << "TMSG CLONE " << this->name << std::endl;
   }
 
-  node_ptr clone() const override { return boost::make_shared<TimingMsg>(TimingMsg(*this)); }
+  node_ptr clone() const override { return std::make_shared<TimingMsg>(TimingMsg(*this)); }
 
   void show(void)                                       const;
   void show(uint32_t cnt, const char* sPrefix)          const;
@@ -91,7 +91,7 @@ public:
   virtual void accept(const VisitorValidation& v)       const override { v.visit(*this); }
   virtual void serialise(const mVal &m, uint8_t* b) const;
   virtual void deserialise(uint8_t* b);
-  node_ptr clone() const override { return boost::make_shared<Switch>(Switch(*this)); }
+  node_ptr clone() const override { return std::make_shared<Switch>(Switch(*this)); }
 };
 
 // Sets the origin node for a cpu/thread combo
@@ -113,7 +113,7 @@ public:
   virtual void accept(const VisitorValidation& v)       const override { v.visit(*this); }
   void serialise(const mVal &m, uint8_t* b) const;
   void deserialise(uint8_t* b);
-  node_ptr clone() const override { return boost::make_shared<Origin>(Origin(*this)); }
+  node_ptr clone() const override { return std::make_shared<Origin>(Origin(*this)); }
 };
 
 // Sarts threads at a given time (current of executor plus offset)
@@ -138,7 +138,7 @@ public:
   virtual void accept(const VisitorValidation& v)       const override { v.visit(*this); }
   void serialise(const mVal &m, uint8_t* b) const;
   void deserialise(uint8_t* b);
-  node_ptr clone() const override { return boost::make_shared<StartThread>(StartThread(*this)); }
+  node_ptr clone() const override { return std::make_shared<StartThread>(StartThread(*this)); }
 };
 
 
@@ -186,7 +186,7 @@ public:
   : Command(name, pattern, beamproc, hash, cpu, ((flags & ~NFLG_TYPE_SMSK) | (NODE_TYPE_CNOOP << NFLG_TYPE_POS)), tOffs, tValid, (ACT_TYPE_NOOP << ACT_TYPE_POS) | (prio & ACT_PRIO_MSK) << ACT_PRIO_POS | (qty & ACT_QTY_MSK) << ACT_QTY_POS | vabs << ACT_VABS_POS) {}
   Noop(const Noop& src) : Command(src) {}
   ~Noop() {};
-  node_ptr clone() const override { return boost::make_shared<Noop>(Noop(*this)); }
+  node_ptr clone() const override { return std::make_shared<Noop>(Noop(*this)); }
 
   void show(void) const;
   void show(uint32_t cnt, const char* sPrefix) const;
@@ -209,7 +209,7 @@ public:
       : Command(name, pattern, beamproc, hash, cpu, ((flags & ~NFLG_TYPE_SMSK) | (NODE_TYPE_CFLOW << NFLG_TYPE_POS)), tOffs, tValid, (ACT_TYPE_FLOW << ACT_TYPE_POS) | (prio & ACT_PRIO_MSK) << ACT_PRIO_POS | (qty & ACT_QTY_MSK) << ACT_QTY_POS | vabs << ACT_VABS_POS | permanent << ACT_CHP_POS )   {}
   Flow(const Flow& src) : Command(src) {}
   ~Flow() {};
-    node_ptr clone() const override { return boost::make_shared<Flow>(Flow(*this)); }
+    node_ptr clone() const override { return std::make_shared<Flow>(Flow(*this)); }
 
   void show(void) const;
   void show(uint32_t cnt, const char* sPrefix) const;
@@ -232,7 +232,7 @@ public:
   : Command(name, pattern, beamproc, hash, cpu, ((flags & ~NFLG_TYPE_SMSK) | (NODE_TYPE_CWAIT << NFLG_TYPE_POS)), tOffs, tValid, (ACT_TYPE_WAIT << ACT_TYPE_POS) | (prio & ACT_PRIO_MSK) << ACT_PRIO_POS | 1 << ACT_QTY_POS | vabs << ACT_VABS_POS), tWait(tWait) {}
   Wait(const Wait& src) : Command(src), tWait(src.tWait) {}
   ~Wait() {};
-  node_ptr clone() const override { return boost::make_shared<Wait>(Wait(*this)); }
+  node_ptr clone() const override { return std::make_shared<Wait>(Wait(*this)); }
 
   void show(void) const;
   void show(uint32_t cnt, const char* sPrefix) const;
@@ -267,7 +267,7 @@ public:
         frmIl(frmIl), toIl(toIl), frmHi(frmHi), toHi(toHi), frmLo(frmLo), toLo(toLo) {};
   Flush(const Flush& src) : Command(src), mode(src.mode), frmIl(src.frmIl), toIl(src.toIl), frmHi(src.frmHi), toHi(src.toHi), frmLo(src.frmLo), toLo(src.toLo) {}
   ~Flush() {};
-    node_ptr clone() const override { return boost::make_shared<Flush>(Flush(*this)); }
+    node_ptr clone() const override { return std::make_shared<Flush>(Flush(*this)); }
 
   void show(void)  const;
   void show(uint32_t cnt, const char* sPrefix)  const;

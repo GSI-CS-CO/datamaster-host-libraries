@@ -13,7 +13,7 @@ public:
   : Node(name, pattern, beamproc, hash, cpu, ((flags & ~NFLG_TYPE_SMSK) | (NODE_TYPE_GLOBAL << NFLG_TYPE_POS))), section(section) {}
   Global(const Global& src) : Node(src), section(src.section) {}
   ~Global()  {};
-  node_ptr clone() const { return boost::make_shared<Global>(Global(*this)); }
+  node_ptr clone() const { return std::make_shared<Global>(Global(*this)); }
 
 
   virtual void accept(const VisitorVertexWriter& v)     const override { v.visit(*this); }

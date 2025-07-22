@@ -272,8 +272,8 @@ std::string& CarpeDM::CarpeDMimpl::getRawQReport(const std::string& blockName, s
     qr.name = blockName;
 
     //check their Q counters for unprocessed commands
-    uint32_t wrIdxs = boost::dynamic_pointer_cast<Block>(g[x->v].np)->getWrIdxs();
-    uint32_t rdIdxs = boost::dynamic_pointer_cast<Block>(g[x->v].np)->getRdIdxs();
+    uint32_t wrIdxs = std::dynamic_pointer_cast<Block>(g[x->v].np)->getWrIdxs();
+    uint32_t rdIdxs = std::dynamic_pointer_cast<Block>(g[x->v].np)->getRdIdxs();
 
     if (verbose) sLog << "Check for orphaned commands is scanning Queue @ " << blockName << std::endl;
 

@@ -39,7 +39,7 @@ public:
   : Meta(name, pattern, beamproc, hash, cpu, ((flags & ~NFLG_TYPE_SMSK) | (NODE_TYPE_QUEUE << NFLG_TYPE_POS))) {}
   CmdQMeta(const CmdQMeta& src) : Meta(src) {}
   ~CmdQMeta()  {};
-  node_ptr clone() const { return boost::make_shared<CmdQMeta>(CmdQMeta(*this)); }
+  node_ptr clone() const { return std::make_shared<CmdQMeta>(CmdQMeta(*this)); }
 
 
   virtual void accept(const VisitorVertexWriter& v)     const override { v.visit(*this); }
@@ -62,7 +62,7 @@ public:
   : Meta(name, pattern, beamproc, hash, cpu, ((flags & ~NFLG_TYPE_SMSK) | (NODE_TYPE_QBUF << NFLG_TYPE_POS))) {}
   CmdQBuffer(const CmdQBuffer& src) : Meta(src) {}
   ~CmdQBuffer()  {};
-  node_ptr clone() const { return boost::make_shared<CmdQBuffer>(CmdQBuffer(*this)); }
+  node_ptr clone() const { return std::make_shared<CmdQBuffer>(CmdQBuffer(*this)); }
 
   virtual void accept(const VisitorVertexWriter& v)     const override { v.visit(*this); }
   virtual void accept(const VisitorUploadCrawler& v)    const override { v.visit(*this); }
@@ -83,7 +83,7 @@ public:
   : Meta(name, pattern, beamproc, hash, cpu, ((flags & ~NFLG_TYPE_SMSK) | (NODE_TYPE_ALTDST << NFLG_TYPE_POS))) {}
   ~DestList()  {};
   DestList(const DestList& src) : Meta(src) {}
-  node_ptr clone() const { return boost::make_shared<DestList>(DestList(*this)); }
+  node_ptr clone() const { return std::make_shared<DestList>(DestList(*this)); }
 
   virtual void accept(const VisitorVertexWriter& v)     const override { v.visit(*this); }
   virtual void accept(const VisitorUploadCrawler& v)    const override { v.visit(*this); }

@@ -923,8 +923,8 @@ vEbwrs& CarpeDM::CarpeDMimpl::staticFlush(const std::string& sBlock, bool prioIl
   //get the block
   auto x = at.lookupHash(hm.lookup(sBlock, carpeDMcommand::exIntro));
   uint32_t cpyMsk = 0;
-  uint32_t wrIdxs = boost::dynamic_pointer_cast<Block>(g[x->v].np)->getWrIdxs();
-  uint32_t rdIdxs = boost::dynamic_pointer_cast<Block>(g[x->v].np)->getRdIdxs();
+  uint32_t wrIdxs = std::dynamic_pointer_cast<Block>(g[x->v].np)->getWrIdxs();
+  uint32_t rdIdxs = std::dynamic_pointer_cast<Block>(g[x->v].np)->getRdIdxs();
 
   if (prioIl) cpyMsk |= (0xff << (PRIO_IL*8));
   if (prioHi) cpyMsk |= (0xff << (PRIO_HI*8));
