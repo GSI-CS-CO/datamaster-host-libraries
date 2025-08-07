@@ -63,11 +63,12 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/src/hashmap.cpp
     ${PROJECT_SOURCE_DIR}/src/carpeDMdiagnostics.cpp
     ${PROJECT_SOURCE_DIR}/src/common.cpp
+    ${PROJECT_SOURCE_DIR}/src/log.cpp
 )
 
 configure_file(${PROJECT_SOURCE_DIR}/src/target_info.h.in target_info.h)
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES} ${LZM_SOURCE_FILES} ${DATAMASTER_COMMON_SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCES} ${LZM_SOURCE_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${CMAKE_PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 target_include_directories(
     ${PROJECT_NAME}
@@ -84,8 +85,10 @@ target_include_directories(
 target_link_libraries(
     ${PROJECT_NAME}
     PRIVATE etherbone ${libxml2_LIBRARIES} Boost::serialization Boost::graph
-    PUBLIC datamaster-common
+    PUBLIC datamaster-common-lib
+    PRIVATE spdlog::spdlog
 )
+
 target_compile_definitions(
     ${PROJECT_NAME}
     PRIVATE
