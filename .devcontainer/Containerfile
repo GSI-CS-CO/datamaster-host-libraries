@@ -1,5 +1,7 @@
 FROM 192.168.1.100:5000/timing/ftm-builder:latest as builder
 
+RUN apt install dwarves -y
+
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=vscode
