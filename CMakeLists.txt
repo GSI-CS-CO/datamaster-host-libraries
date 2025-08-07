@@ -7,11 +7,11 @@ project(datamaster
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(BUILD_FIRMWARE OFF CACHE BOOL "Build firmware? If false, host libraries are built")
+include(cmake/CPM.cmake)
 
-
+set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code globally")
 
 if(${BUILD_FIRMWARE})
-
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/out)
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/out)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/out)
@@ -20,7 +20,16 @@ if(${BUILD_FIRMWARE})
   add_subdirectory(modules/datamaster-firmware)
 
 elseif(${BUILD_HOST})
-  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+  CPMAddPackage(
+    NAME spdlog
+    GITHUB_REPOSITORY gabime/spdlog
+    GIT_TAG v1.15.3
+  )
+  CPMAddPackage(
+    NAME fmt
+    GITHUB_REPOSITORY fmtlib/fmt
+    GIT_TAG 11.2.0
+  )
 
   message(STATUS "Build to ${PROJECT_SOURCE_DIR}/bin")
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
@@ -28,6 +37,7 @@ elseif(${BUILD_HOST})
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
   add_subdirectory(modules/datamaster-common)
+  add_subdirectory(modules/datamaster-common-lib)
   add_subdirectory(modules/datamaster-host-libraries)
   # no fesa here, if you want to pollute your beautiful system with that crap...HOW ABOUT NO
   add_subdirectory(modules/datamaster-tools)
@@ -41,14 +51,26 @@ elseif(${BUILD_HOST})
   include(CPack)
 
 else()
-  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
-  add_compile_options(-g -O0 -fno-omit-frame-pointer)
+
+  CPMAddPackage(
+    NAME spdlog
+    GITHUB_REPOSITORY gabime/spdlog
+    GIT_TAG v1.15.3
+  )
+  CPMAddPackage(
+    NAME fmt
+    GITHUB_REPOSITORY fmtlib/fmt
+    GIT_TAG 11.2.0
+  )
+
+  add_compile_options(-g -fno-omit-frame-pointer)
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/out)
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/out)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/out)
 
   add_subdirectory(modules/datamaster-common)
+  add_subdirectory(modules/datamaster-common-lib)
   add_subdirectory(modules/datamaster-host-libraries)
   add_subdirectory(modules/fesa-class-generator)
   add_subdirectory(modules/fesa-du-generator)
