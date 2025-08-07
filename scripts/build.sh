@@ -6,13 +6,26 @@ set -e
 # shellcheck source=./.container-helpers
 . "$(dirname "$0")/.container-helpers"
 
+CMAKE_BUILD_TYPE="Release"
+
+# test if "--debug" is passed as an argument
+if [[ "$1" == "--debug" ]]; then
+    CMAKE_BUILD_TYPE="Debug"
+fi
+readonly CMAKE_BUILD_TYPE
+
 reopen_script_in_container
 
 echo "BUILDING DEV TOOLS"
 exec 3>&1 4>&2
 exec > >(sed 's/^/[DEV TOOLS] /') 2>&1
-cmake -B ./build/build_dev/ -DBUILD_HOST=ON -G Ninja -DENABLE_TESTS=ON
-cmake --build build/build_dev
+cmake -B ./build/build_dev/ \
+    -DBUILD_HOST=ON \
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+    -G Ninja \
+    -DENABLE_TESTS=ON
+cmake --build build/build_dev \
+    --parallel "$(nproc)"
 exec 1>&3 2>&4
 
 # shellcheck source=/dev/null
@@ -26,7 +39,8 @@ echo "BUILDING HOST TOOLS"
 cmake -B ./build/build_host/ \
     --toolchain "${OE_CMAKE_TOOLCHAIN_FILE}" \
      -G Ninja
-cmake --build build/build_host
+cmake --build build/build_host \
+    --parallel "$(nproc)"
 
 
 exec 1>&3 2>&4
@@ -58,9 +72,12 @@ cmake -B ./build/build_firmware/ \
     -DCBR_GIT2="$CBR_GIT2" \
     -DCBR_GIT3="$CBR_GIT3" \
     -DCBR_GIT4="$CBR_GIT4" \
-    -DCBR_GIT5="$CBR_GIT5"
+    -DCBR_GIT5="$CBR_GIT5" \
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 
-cmake --build build/build_firmware
+# Firmware build broken for now because of not supporting datamaster-commmon
+# Fix this by having an interface only library for datamaster-common
+cmake --build build/build_firmware \
+    --parallel "$(nproc)" \
 
 exec 1>&3 2>&4
-
