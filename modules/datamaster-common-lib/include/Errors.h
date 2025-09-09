@@ -9,4 +9,14 @@ struct ConversionError
   std::string message;
 };
 
+struct ParsingError
+{
+  std::string message;
+};
+
+struct FilterGraphError
+{
+  std::string message;
+};
+
 } // namespace carpeDM

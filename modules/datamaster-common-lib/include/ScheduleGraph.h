@@ -20,55 +20,44 @@ constexpr node_hash_t INVALID_NODE_HASH = 0;
 
 struct __attribute__( ( packed ) ) NodeFlags
 {
-  // Node type (e.g., Event, Block, etc.)
-  uint32_t type : 8;
+  union {
+    uint32_t raw; // Raw flags as a 32-bit integer
+    struct {      
+      // Node type (e.g., Event, Block, etc.)
+      uint32_t type : 8;
 
-  // Node flag field bit defs - Paint bit - the lm32 has visited this node
-  uint32_t painted_lm32 : 1;
+      // Node flag field bit defs - Paint bit - the lm32 has visited this node
+      uint32_t painted_lm32 : 1;
 
-  // Node flag field bit defs - paint bit - the host has visited this node - NOT IMPLEMENTED
-  uint32_t painted_host : 1; // Node is painted on the host
+      // Node flag field bit defs - paint bit - the host has visited this node - NOT IMPLEMENTED
+      uint32_t painted_host : 1; // Node is painted on the host
 
-  // Node flag field bit defs - sync bit - this node should only be started synchronous to another
-  uint32_t sync : 1;
+      // Node flag field bit defs - sync bit - this node should only be started synchronous to another
+      uint32_t sync : 1;
 
-  uint32_t padding : 1;
+      uint32_t padding : 1;
 
-  // Node is a beamproc entry point
-  uint32_t bpentry : 1;
+      // Node is a beamproc entry point
+      uint32_t bpentry : 1;
 
-  // Node is a pattern entry point
-  uint32_t patentry : 1;
+      // Node is a pattern entry point
+      uint32_t patentry : 1;
 
-  // Node is a beamproc exit point
-  uint32_t bpexit : 1;
+      // Node is a beamproc exit point
+      uint32_t bpexit : 1;
 
-  // Node is a pattern exit point
-  uint32_t patexit : 1;
+      // Node is a pattern exit point
+      uint32_t patexit : 1;
 
-  // Debug flag, used for debugging purposes
-  uint32_t debug : 2;
+      // Debug flag, used for debugging purposes
+      uint32_t debug : 2;
 
-  // Reserved for future use
-  uint32_t _padding : 2;
+      // Reserved for future use
+      uint32_t _padding : 2;
 
-  uint32_t specific : 5; // Type-specific bits (bits 28-31)
-
-  constexpr NodeFlags()
-      : type( 0 )
-      , painted_lm32( 0 )
-      , painted_host( 0 )
-      , sync( 0 )
-      , padding( 0 )
-      , bpentry( 0 )
-      , patentry( 0 )
-      , bpexit( 0 )
-      , patexit( 0 )
-      , debug( 0 )
-      , _padding( 0 )
-      , specific( 0 )
-  {
-  }
+      uint32_t specific : 5; // Type-specific bits (bits 28-31)
+    } content; // Content of the flags, packed into a struct
+  };
 };
 
 static_assert( sizeof( NodeFlags ) == sizeof( uint32_t ), "NodeFlags must be 4 bytes" );
@@ -79,14 +68,22 @@ static_assert( sizeof( NodeFlags ) == sizeof( uint32_t ), "NodeFlags must be 4 b
  */
 struct Node
 {
+  // Indices
   std::string name     = "";
-  std::string pattern  = "";
-  std::string beamproc = "";
   uint32_t    hash     = 0;
-  uint8_t     cpu      = 0;
-  NodeFlags   flags    = {};
 
+  // Mandatory 
+  uint8_t     cpu      = 0;
+  std::string pattern  = "";
+
+  // Optional
+  std::string beamproc = "";
   node_hash_t defaultDestination = INVALID_NODE_HASH;
+
+  // Node flags, packed into a 32-bit integer
+  // How these are seet depends on the actual type of node
+  // The node is encoded into the flags, which is the only mandatory field
+  NodeFlags flags; 
 };
 
 struct Event : public Node

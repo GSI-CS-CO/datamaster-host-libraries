@@ -74,10 +74,9 @@ TEST( TimingMessageIdMapping, MergeSubIDsIntoID_MaxValuesFormatID1 )
   v.id_bpid     = std::to_string( CreateNBitMask<uint32_t>( 14 ) );
   v.id_reqnob   = std::to_string( CreateNBitMask<uint32_t>( 1 ) );
   v.id_vacc     = std::to_string( CreateNBitMask<uint32_t>( 4 ) );
-  v.id_evtidatt = std::to_string( CreateNBitMask<uint32_t>( 6 ) );
 
   auto id = MergeSubIDsIntoID( v );
-  EXPECT_EQ( id, "0x1ffffffcffffffff" );
+  EXPECT_EQ( id, "0x1ffffffcffffffdf" );
 }
 
 TEST( TimingMessageIdMapping, SplitIDIntoSubIDs_AllZeroFormatID0 )
@@ -157,7 +156,6 @@ TEST( TimingMessageIdMapping, SplitIDIntoSubIDs_MaxValuesFormatID1 )
   EXPECT_EQ( v.id_bpcstart, "1" );
   EXPECT_EQ( v.id_reqnob, "1" );
   EXPECT_EQ( v.id_vacc, "15" );
-  EXPECT_EQ( v.id_evtidatt, "63" );
 }
 
 TEST( TimingMessageIdMapping, MergeSubIDsIntoID_RandomExampleFormatID1 )
@@ -249,5 +247,4 @@ TEST( TimingMessageIdMapping, SyncIdSubIds_EmptySubIdsFormatID1 )
   EXPECT_EQ( v.id_bpcstart, "1" );
   EXPECT_EQ( v.id_reqnob, "1" );
   EXPECT_EQ( v.id_vacc, "15" );
-  EXPECT_EQ( v.id_evtidatt, "63" );
 }

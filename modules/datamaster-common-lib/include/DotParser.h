@@ -37,15 +37,6 @@ struct DotGraph
 };
 
 /**
- * Error structure for parsing errors.
- * Contains an error message describing the parsing issue.
- */
-struct ParsingError
-{
-  std::string message;
-};
-
-/**
  * Parser for DOT graphs.
  */
 class DotGraphParser

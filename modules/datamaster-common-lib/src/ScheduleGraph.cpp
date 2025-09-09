@@ -17,8 +17,12 @@
 
 using namespace carpeDM;
 
+namespace
+{
+const auto REQUIRED_NODE_ATTRIBUTES = std::vector<std::string>{ "pattern", "cpu", "type" };
+
 template <typename T>
-constexpr T parseValue( const std::string& value )
+constexpr T ParseValue( const std::string& value )
 {
   if constexpr ( std::is_same_v<T, uint64_t> )
   {
@@ -44,40 +48,48 @@ constexpr T parseValue( const std::string& value )
     }
     return false;
   }
+  else if constexpr ( std::is_same_v<T, std::string> )
+  {
+    return value;
+  }
   else
   {
     static_assert( std::is_same_v<T, uint64_t> || std::is_same_v<T, uint32_t> || std::is_same_v<T, uint8_t> ||
                        std::is_same_v<T, bool>,
-                   "Unsupported type for parseValue" );
+                   "Unsupported type for ParseValue" );
   }
 }
 
 template <typename T>
-T parseOptionalValue( const std::unordered_map<std::string, std::string>& map, const std::string& key, T defaultValue )
+T ParseOptionalValue( const std::unordered_map<std::string, std::string>& map, const std::string& key, T defaultValue )
 {
   auto found = map.count( key ) != 0;
   if ( !found )
   {
     return defaultValue;
   }
-  return parseValue<T>( map.at( key ) );
+  return ParseValue<T>( map.at( key ) );
 }
 
 void ParseFlags( Node& attrs, const DotGraphVertex& vertex )
 {
-  auto bpentry  = parseOptionalValue<bool>( vertex.attributes, "bpentry", false );
-  auto bpexit   = parseOptionalValue<bool>( vertex.attributes, "bpexit", false );
-  auto patEntry = parseOptionalValue<bool>( vertex.attributes, "patentry", false );
-  auto patExit  = parseOptionalValue<bool>( vertex.attributes, "patexit", false );
+  auto bpentry  = ParseOptionalValue<bool>( vertex.attributes, "bpentry", false );
+  auto bpexit   = ParseOptionalValue<bool>( vertex.attributes, "bpexit", false );
+  auto patEntry = ParseOptionalValue<bool>( vertex.attributes, "patentry", false );
+  auto patExit  = ParseOptionalValue<bool>( vertex.attributes, "patexit", false );
+
+  attrs.flags.content.bpentry  = bpentry ? 1 : 0;
+  attrs.flags.content.bpexit   = bpexit ? 1 : 0;
+  attrs.flags.content.patentry = patEntry ? 1 : 0;
+  attrs.flags.content.patexit  = patExit ? 1 : 0;
 }
 
 void ParseCommonCommandAttributes( Command& attrs, const DotGraphVertex& vertex )
 {
-  attrs.tValid  = parseValue<uint64_t>( vertex.attributes.at( "tvalid" ) );
-  uint8_t  prio = parseValue<uint8_t>( vertex.attributes.at( "prio" ) );
-  uint32_t qty  = parseValue<uint32_t>( vertex.attributes.at( "qty" ) );
-
-  bool vabs = parseOptionalValue<bool>( vertex.attributes, "vabs", false );
+  attrs.tValid  = ParseOptionalValue<uint64_t>( vertex.attributes, "tvalid", 0 );
+  uint8_t  prio = ParseOptionalValue<uint8_t>( vertex.attributes, "prio", 0 );
+  uint32_t qty  = ParseOptionalValue<uint32_t>( vertex.attributes, "qty", 0 );
+  bool     vabs = ParseOptionalValue<bool>( vertex.attributes, "vabs", false );
 
   // What is chp?
   // bool     chp  = static_cast<bool>( std::stoul( vertex.attributes.at( "chp" ) ) );
@@ -97,21 +109,19 @@ void ParseCommonNodeAttributes( Node& attrs, const DotGraphVertex& vertex, uint3
 {
   attrs.name     = vertex.id;
   attrs.pattern  = vertex.attributes.at( "pattern" );
-  attrs.beamproc = vertex.attributes.at( "beamproc" );
+  attrs.beamproc = ParseOptionalValue<std::string>( vertex.attributes, "beamproc", "" );
 
   attrs.hash = fnv1a_hash( vertex.id );
-  attrs.cpu  = parseValue<decltype( attrs.cpu )>( vertex.attributes.at( "cpu" ) );
+  attrs.cpu  = ParseValue<decltype( attrs.cpu )>( vertex.attributes.at( "cpu" ) );
 
-  // Whats that beamproc?
+  attrs.flags.raw = 0;
+  memcpy( &attrs.flags.content, &attrs.flags.raw, sizeof( NodeFlags ) );
+  ParseFlags( attrs, vertex );
 
-  bool bpentry  = parseOptionalValue<bool>( vertex.attributes, "bpentry", false );
-  bool bpexit   = parseOptionalValue<bool>( vertex.attributes, "bpexit", false );
-  bool patentry = parseOptionalValue<bool>( vertex.attributes, "patentry", false );
-  bool patexit  = parseOptionalValue<bool>( vertex.attributes, "patexit", false );
+  attrs.flags.content.type = typeFlag;
 
-  bool qlo = parseOptionalValue<bool>( vertex.attributes, "qlo", false );
-  bool qhi = parseOptionalValue<bool>( vertex.attributes, "qhi", false );
-  bool qil = parseOptionalValue<bool>( vertex.attributes, "qil", false );
+  // Default destination is INVALID_NODE_HASH
+  attrs.defaultDestination = INVALID_NODE_HASH;
 }
 
 template <typename NodeType>
@@ -135,19 +145,11 @@ ScheduleGraphNode ParseGraphNode<TimingMessage>( const DotGraphVertex& vertex, u
   ParseCommonEventAttributes( tmsg, vertex );
   // e.g id="0x112c0ff000000000"
 
-  tmsg.id = static_cast<uint64_t>( std::stoull( vertex.attributes.at( "id" ), nullptr, 16 ) );
-
+  tmsg.id  = static_cast<uint64_t>( std::stoull( vertex.attributes.at( "id" ), nullptr, 16 ) );
   tmsg.par = static_cast<uint64_t>( std::stoull( vertex.attributes.at( "par" ) ) );
-  tmsg.tef = static_cast<uint32_t>( std::stoul( vertex.attributes.at( "tef" ) ) );
 
-  if ( vertex.attributes.find( "res" ) != vertex.attributes.end() )
-  {
-    tmsg.res = static_cast<uint32_t>( std::stoul( vertex.attributes.at( "res" ) ) );
-  }
-  else
-  {
-    tmsg.res = 0; // Default value if not present
-  }
+  tmsg.tef = ParseOptionalValue<uint32_t>( vertex.attributes, "tef", 0 );
+  tmsg.res = ParseOptionalValue<uint32_t>( vertex.attributes, "res", 0 );
 
   return tmsg;
 }
@@ -223,8 +225,7 @@ ScheduleGraphNode ParseGraphNode<Flush>( const DotGraphVertex& vertex, uint32_t 
   Flush flush;
   ParseCommonNodeAttributes( flush, vertex, typeFlag );
   ParseCommonCommandAttributes( flush, vertex );
-  flush.tOffs  = static_cast<uint64_t>( std::stoull( vertex.attributes.at( "toffs" ) ) );
-  flush.tValid = static_cast<uint64_t>( std::stoull( vertex.attributes.at( "tvalid" ) ) );
+  flush.tOffs = static_cast<uint64_t>( std::stoull( vertex.attributes.at( "toffs" ) ) );
 
   return flush;
 }
@@ -293,32 +294,20 @@ ScheduleGraphNode GenericParseGraphNode( const DotGraphVertex& vertex )
   {
   case carpeDM::VertexType::Block:
     return ParseGraphNode<Block>( vertex, NODE_TYPE_BLOCK_FIXED );
-  case carpeDM::VertexType::BLockAlign:
+  case carpeDM::VertexType::BlockAlign:
     return ParseGraphNode<Block>( vertex, NODE_TYPE_BLOCK_ALIGN );
   case carpeDM::VertexType::Tmsg:
     return ParseGraphNode<TimingMessage>( vertex, NODE_TYPE_TMSG );
   case carpeDM::VertexType::Noop:
     return ParseGraphNode<NoOp>( vertex, NODE_TYPE_CNOOP );
-  case carpeDM::VertexType::Switch:
-    return ParseGraphNode<Switch>( vertex, NODE_TYPE_CSWITCH );
   case carpeDM::VertexType::Origin:
     return ParseGraphNode<Origin>( vertex, NODE_TYPE_ORIGIN );
   case carpeDM::VertexType::Flow:
-    return ParseGraphNode<Flow>( vertex, NODE_TYPE_CFLOW );
-  case carpeDM::VertexType::StartThread:
-    return ParseGraphNode<StartThread>( vertex, NODE_TYPE_STARTTHREAD );
+    return ParseGraphNode<Flow>( vertex, NODE_TYPE_STARTTHREAD );
   case carpeDM::VertexType::Flush:
     return ParseGraphNode<Flush>( vertex, NODE_TYPE_CFLUSH );
   case carpeDM::VertexType::Wait:
     return ParseGraphNode<Wait>( vertex, NODE_TYPE_CWAIT );
-  case carpeDM::VertexType::QInfo:
-    return ParseGraphNode<CmdQMeta>( vertex, NODE_TYPE_QUEUE );
-  case carpeDM::VertexType::ListDst:
-    return ParseGraphNode<DestList>( vertex, NODE_TYPE_ALTDST );
-  case carpeDM::VertexType::QBuf:
-    return ParseGraphNode<CmdQBuffer>( vertex, NODE_TYPE_QBUF );
-  case carpeDM::VertexType::Global:
-    return ParseGraphNode<Global>( vertex, NODE_TYPE_GLOBAL );
   default:
     throw std::runtime_error( "Unsupported vertex type: " + vertex.attributes.at( "type" ) );
   }
@@ -329,6 +318,10 @@ bool IsCommandType( carpeDM::VertexType type )
 
   // Force compiler error for missing cases
 
+#pragma gcc diagnostic push
+#pragma gcc diagnostic ignored "-Wswitch"
+#pragma gcc diagnostic ignored "-Wswitch-enum"
+
   switch ( type )
   {
   case carpeDM::VertexType::Noop:
@@ -340,18 +333,13 @@ bool IsCommandType( carpeDM::VertexType type )
   case carpeDM::VertexType::Wait:
     return true;
   case carpeDM::VertexType::Block:
-  case carpeDM::VertexType::BLockAlign:
+  case carpeDM::VertexType::BlockAlign:
   case carpeDM::VertexType::Tmsg:
-  case carpeDM::VertexType::Switch:
   case carpeDM::VertexType::Origin:
-  case carpeDM::VertexType::StartThread:
-  case carpeDM::VertexType::QInfo:
-  case carpeDM::VertexType::ListDst:
-  case carpeDM::VertexType::QBuf:
-  case carpeDM::VertexType::Global:
     return false;
   } // explicitely no default case to enforce compiler errors
 
+#pragma gcc diagnostic pop
   return false;
 }
 
@@ -359,27 +347,24 @@ bool IsEventType( carpeDM::VertexType type )
 {
   // Force compiler error for missing cases
 
+  if ( IsCommandType( type ) )
+  {
+    return true;
+  }
+
   switch ( type )
   {
   case carpeDM::VertexType::Tmsg:
     [[fallthrough]];
-  case carpeDM::VertexType::Switch:
-    [[fallthrough]];
   case carpeDM::VertexType::Origin:
-    [[fallthrough]];
-  case carpeDM::VertexType::StartThread:
     [[fallthrough]];
   case carpeDM::VertexType::Wait:
     return true;
   case carpeDM::VertexType::Block:
-  case carpeDM::VertexType::BLockAlign:
+  case carpeDM::VertexType::BlockAlign:
   case carpeDM::VertexType::Noop:
   case carpeDM::VertexType::Flow:
   case carpeDM::VertexType::Flush:
-  case carpeDM::VertexType::QInfo:
-  case carpeDM::VertexType::ListDst:
-  case carpeDM::VertexType::QBuf:
-  case carpeDM::VertexType::Global:
     return false;
   } // explicitely no default case to enforce compiler errors
 
@@ -387,128 +372,147 @@ bool IsEventType( carpeDM::VertexType type )
 }
 
 std::optional<ConversionError>
+ExpectAttributeToBePresent( const decltype( DotGraph::vertices )::value_type::second_type& vertex,
+                            const std::string&                                             attributeName )
+{
+  if ( vertex.attributes.find( attributeName ) == vertex.attributes.end() )
+  {
+    return ConversionError{ fmt::format( "Missing required attribute: {} in Vertex: {}", attributeName, vertex.id ) };
+  }
+  return std::nullopt; // Attribute is present
+}
+
+std::vector<ConversionError>
+ExpectAttributesToBePresent( const decltype( DotGraph::vertices )::value_type::second_type& vertex,
+                             const std::vector<std::string>&                                attributes )
+{
+  std::vector<ConversionError> errors;
+  for ( const auto& attr : attributes )
+  {
+    auto error = ExpectAttributeToBePresent( vertex, attr );
+    if ( error.has_value() )
+    {
+      errors.push_back( *error );
+    }
+  }
+  return errors;
+}
+
+std::optional<ConversionError> ConcatenateErrors( const std::vector<ConversionError>& errors )
+{
+  if ( errors.empty() )
+  {
+    return std::nullopt; // No errors to concatenate
+  }
+
+  const auto concatenatedMessage = std::accumulate( errors.begin(),
+                                                    errors.end(),
+                                                    std::string{},
+                                                    []( const std::string& acc, const ConversionError& error )
+                                                    {
+                                                      return acc + ( acc.empty() ? "" : "\n" ) + error.message;
+                                                    } );
+
+  return ConversionError{ concatenatedMessage };
+}
+
+[[nodiscard]] auto VerifyCommandAttributes( const decltype( DotGraph::vertices )::value_type::second_type& vertex )
+{
+  return ExpectAttributesToBePresent( vertex, {} );
+}
+
+[[nodiscard]] auto VerifyEventAttributes( const decltype( DotGraph::vertices )::value_type::second_type& vertex )
+{
+  return ExpectAttributesToBePresent( vertex, { "toffs" } );
+}
+
+[[nodiscard]] auto
+VerifyTimingMessageAttributes( const decltype( DotGraph::vertices )::value_type::second_type& vertex )
+{
+  auto errors = ExpectAttributesToBePresent( vertex, { "par" } );
+
+  auto idPresentError = ExpectAttributeToBePresent( vertex, "id" );
+  if ( idPresentError.has_value() )
+  {
+    auto subIdPresentError =
+        ExpectAttributesToBePresent( vertex, { "sfid", "gid", "evtno", "sid", "bpid", "reqnobeam", "vacc" } );
+    if ( subIdPresentError.size() > 0 )
+    {
+      errors.push_back(
+          ConversionError{ fmt::format( "Missing required id or sub-id attributes in tmsg Vertex: {}", vertex.id ) } );
+      std::move( subIdPresentError.begin(), subIdPresentError.end(), std::back_inserter( errors ) );
+    }
+  }
+
+  return errors;
+}
+
+std::vector<ConversionError>
 VerifyNodeAttributes( const decltype( DotGraph::vertices )::value_type::second_type& vertex )
 {
   constexpr std::string_view errorMsg( "Missing required attribute: {} in Vertex: {}" );
 
-  if ( vertex.attributes.find( "pattern" ) == vertex.attributes.end() )
+  auto collectedErrors = ExpectAttributesToBePresent( vertex, std::vector<std::string>( REQUIRED_NODE_ATTRIBUTES ) );
+
+  if ( !collectedErrors.empty() )
   {
-    return ConversionError{ fmt::format( errorMsg, "pattern", vertex.id ) };
+    return collectedErrors;
   }
 
-  if ( vertex.attributes.find( "beamproc" ) == vertex.attributes.end() )
-  {
-    return ConversionError{ fmt::format( errorMsg, "beamproc", vertex.id ) };
-  }
-
-  if ( vertex.attributes.find( "cpu" ) == vertex.attributes.end() )
-  {
-    return ConversionError{ fmt::format( errorMsg, "cpu", vertex.id ) };
-  }
-
-  if ( vertex.attributes.find( "flags" ) == vertex.attributes.end() )
-  {
-    return ConversionError{ fmt::format( errorMsg, "flags", vertex.id ) };
-  }
-
-  if ( vertex.attributes.count( "type" ) == 0 )
-  {
-    return ConversionError{ fmt::format( errorMsg, "type", vertex.id ) };
-  }
+  auto typeValue = vertex.attributes.at( "type" );
 
   // Check if type is valid
-  auto potentialType =
-      magic_enum::enum_cast<carpeDM::VertexType>( vertex.attributes.at( "type" ), magic_enum::case_insensitive );
+  auto potentialType = magic_enum::enum_cast<carpeDM::VertexType>( typeValue, magic_enum::case_insensitive );
   if ( !potentialType.has_value() )
   {
-    return ConversionError{ "Invalid type value" };
+    collectedErrors.push_back(
+        ConversionError{ fmt::format( "Invalid type value: {} in Vertex: {}", typeValue, vertex.id ) } );
+    return collectedErrors;
   }
 
   const auto type = potentialType.value();
 
   if ( IsCommandType( type ) )
   {
-    if ( vertex.attributes.find( "tvalid" ) == vertex.attributes.end() )
-    {
-      return ConversionError{ fmt::format( errorMsg, "tvalid", vertex.id ) };
-    }
-    else if ( vertex.attributes.count( "qty" ) == 0 )
-    {
-      return ConversionError{ fmt::format( errorMsg, "qty", vertex.id ) };
-    }
-    else if ( vertex.attributes.count( "prio" ) == 0 )
-    {
-      return ConversionError{ fmt::format( errorMsg, "prio", vertex.id ) };
-    }
-    else if ( vertex.attributes.count( "vabs" ) == 0 )
-    {
-      return ConversionError{ fmt::format( errorMsg, "vabs", vertex.id ) };
-    }
-    // chp is not required for all command types, so we don't check it here
+    auto errors = VerifyCommandAttributes( vertex );
+    std::move( errors.begin(), errors.end(), std::back_inserter( collectedErrors ) );
   }
 
   if ( IsEventType( type ) )
   {
-    if ( vertex.attributes.find( "toffs" ) == vertex.attributes.end() )
-    {
-      return ConversionError{ fmt::format( errorMsg, "toffs", vertex.id ) };
-    }
+    auto errors = VerifyEventAttributes( vertex );
+    std::move( errors.begin(), errors.end(), std::back_inserter( collectedErrors ) );
   }
 
-  if ( type == carpeDM::VertexType::Block || type == carpeDM::VertexType::BLockAlign )
+  if ( type == carpeDM::VertexType::Block || type == carpeDM::VertexType::BlockAlign )
   {
     if ( vertex.attributes.find( "tperiod" ) == vertex.attributes.end() )
     {
-      return ConversionError{ fmt::format( errorMsg, "tperiod", vertex.id ) };
+      return { ConversionError{ fmt::format( errorMsg, "tperiod", vertex.id ) } };
     }
     // rest of the attributes are optional for Block and BLockAlign
   }
 
-  if ( type == carpeDM::VertexType::Origin || type == carpeDM::VertexType::StartThread )
+  if ( type == carpeDM::VertexType::Origin )
   {
     if ( vertex.attributes.find( "thread" ) == vertex.attributes.end() )
     {
-      return ConversionError{ fmt::format( errorMsg, "thread", vertex.id ) };
-    }
-  }
-
-  if ( type == carpeDM::VertexType::Flush )
-  {
-    if ( vertex.attributes.find( "mode" ) == vertex.attributes.end() ||
-         vertex.attributes.find( "frmil" ) == vertex.attributes.end() ||
-         vertex.attributes.find( "toil" ) == vertex.attributes.end() ||
-         vertex.attributes.find( "frmhi" ) == vertex.attributes.end() ||
-         vertex.attributes.find( "tohi" ) == vertex.attributes.end() ||
-         vertex.attributes.find( "frmlo" ) == vertex.attributes.end() ||
-         vertex.attributes.find( "tolo" ) == vertex.attributes.end() )
-    {
-      return ConversionError{ fmt::format( errorMsg, "flush attributes", vertex.id ) };
-    }
-  }
-
-  if ( type == carpeDM::VertexType::Global )
-  {
-    if ( vertex.attributes.find( "section" ) == vertex.attributes.end() )
-    {
-      return ConversionError{ fmt::format( errorMsg, "section", vertex.id ) };
+      return { ConversionError{ fmt::format( errorMsg, "thread", vertex.id ) } };
     }
   }
 
   if ( carpeDM::VertexType::Tmsg == type )
   {
-    if ( vertex.attributes.find( "id" ) == vertex.attributes.end() ||
-         vertex.attributes.find( "par" ) == vertex.attributes.end() ||
-         vertex.attributes.find( "tef" ) == vertex.attributes.end() )
-    {
-      return ConversionError{ fmt::format( errorMsg, "id/par/tef", vertex.id ) };
-    }
-    // res is optional, so we don't check it here
+    auto verificationErrors = VerifyTimingMessageAttributes( vertex );
+    std::move( verificationErrors.begin(), verificationErrors.end(), std::back_inserter( collectedErrors ) );
   }
 
   // Additional checks for specific types can be added here if needed
 
-  return std::nullopt; // All checks passed
+  return collectedErrors; // All checks passed
 }
+
+} // namespace
 
 ScheduleGraph::ScheduleGraph( std::string name )
     : m_name( std::move( name ) )
@@ -541,11 +545,10 @@ std::variant<ScheduleGraph, ConversionError> ScheduleGraph::fromDotGraph( const 
   for ( const auto& [name, vertex] : dotGraph.vertices )
   {
     auto error = VerifyNodeAttributes( vertex );
-    if ( error.has_value() )
+    if ( error.size() > 0 )
     {
-      errors.push_back( *error );
-      continue; // Skip this vertex if it has errors
-    };
+      std::move( error.begin(), error.end(), std::back_inserter( errors ) );
+    }
   }
 
   if ( errors.size() > 0 )
