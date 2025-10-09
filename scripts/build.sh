@@ -21,6 +21,7 @@ exec 3>&1 4>&2
 exec > >(sed 's/^/[DEV TOOLS] /') 2>&1
 cmake -B ./build/build_dev/ \
     -DBUILD_HOST=ON \
+    -DENABLE_CLASS_HIERARCHY_DUMP=ON \
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
     -G Ninja \
     -DENABLE_TESTS=ON

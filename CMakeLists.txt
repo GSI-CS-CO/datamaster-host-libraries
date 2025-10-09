@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(BUILD_FIRMWARE OFF CACHE BOOL "Build firmware? If false, host libraries are built")
 include(cmake/CPM.cmake)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code globally")
+# set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code globally")
 
 if(${BUILD_FIRMWARE})
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/out)
@@ -41,6 +41,7 @@ elseif(${BUILD_HOST})
   add_subdirectory(modules/datamaster-host-libraries)
   # no fesa here, if you want to pollute your beautiful system with that crap...HOW ABOUT NO
   add_subdirectory(modules/datamaster-tools)
+  add_subdirectory(modules/datalang)
   add_subdirectory(test/test_programs)
 
 
@@ -75,5 +76,6 @@ else()
   add_subdirectory(modules/fesa-class-generator)
   add_subdirectory(modules/fesa-du-generator)
   add_subdirectory(modules/datamaster-tools)
+  add_subdirectory(modules/datalang)
   add_subdirectory(test/test_programs)
 endif()

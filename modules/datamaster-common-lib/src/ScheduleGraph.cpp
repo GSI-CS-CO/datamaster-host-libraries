@@ -308,6 +308,8 @@ ScheduleGraphNode GenericParseGraphNode( const DotGraphVertex& vertex )
     return ParseGraphNode<Flush>( vertex, NODE_TYPE_CFLUSH );
   case carpeDM::VertexType::Wait:
     return ParseGraphNode<Wait>( vertex, NODE_TYPE_CWAIT );
+  case carpeDM::VertexType::StartThread:
+    return ParseGraphNode<StartThread>( vertex, NODE_TYPE_STARTTHREAD );
   default:
     throw std::runtime_error( "Unsupported vertex type: " + vertex.attributes.at( "type" ) );
   }
@@ -325,18 +327,23 @@ bool IsCommandType( carpeDM::VertexType type )
   switch ( type )
   {
   case carpeDM::VertexType::Noop:
-    [[fallthrough]];
+    return std::is_base_of<Command, NoOp>::value;
   case carpeDM::VertexType::Flow:
-    [[fallthrough]];
+    return std::is_base_of<Command, Flow>::value;
   case carpeDM::VertexType::Flush:
-    [[fallthrough]];
+    return std::is_base_of<Command, Flush>::value;
   case carpeDM::VertexType::Wait:
-    return true;
+    return std::is_base_of<Command, Wait>::value;
+  case carpeDM::VertexType::StartThread:
+    return std::is_base_of<Command, StartThread>::value;
   case carpeDM::VertexType::Block:
+    return std::is_base_of<Command, Block>::value;
   case carpeDM::VertexType::BlockAlign:
+    return std::is_base_of<Command, Block>::value;
   case carpeDM::VertexType::Tmsg:
+    return std::is_base_of<Command, TimingMessage>::value;
   case carpeDM::VertexType::Origin:
-    return false;
+    return std::is_base_of<Command, Origin>::value;
   } // explicitely no default case to enforce compiler errors
 
 #pragma gcc diagnostic pop
@@ -345,8 +352,6 @@ bool IsCommandType( carpeDM::VertexType type )
 
 bool IsEventType( carpeDM::VertexType type )
 {
-  // Force compiler error for missing cases
-
   if ( IsCommandType( type ) )
   {
     return true;
@@ -354,18 +359,24 @@ bool IsEventType( carpeDM::VertexType type )
 
   switch ( type )
   {
-  case carpeDM::VertexType::Tmsg:
-    [[fallthrough]];
-  case carpeDM::VertexType::Origin:
-    [[fallthrough]];
-  case carpeDM::VertexType::Wait:
-    return true;
-  case carpeDM::VertexType::Block:
-  case carpeDM::VertexType::BlockAlign:
   case carpeDM::VertexType::Noop:
+    return std::is_base_of<Event, NoOp>::value;
   case carpeDM::VertexType::Flow:
+    return std::is_base_of<Event, Flow>::value;
   case carpeDM::VertexType::Flush:
-    return false;
+    return std::is_base_of<Event, Flush>::value;
+  case carpeDM::VertexType::Wait:
+    return std::is_base_of<Event, Wait>::value;
+  case carpeDM::VertexType::StartThread:
+    return std::is_base_of<Event, StartThread>::value;
+  case carpeDM::VertexType::Block:
+    return std::is_base_of<Event, Block>::value;
+  case carpeDM::VertexType::BlockAlign:
+    return std::is_base_of<Event, Block>::value;
+  case carpeDM::VertexType::Tmsg:
+    return std::is_base_of<Event, TimingMessage>::value;
+  case carpeDM::VertexType::Origin:
+    return std::is_base_of<Event, Origin>::value;
   } // explicitely no default case to enforce compiler errors
 
   return false;
@@ -382,9 +393,19 @@ ExpectAttributeToBePresent( const decltype( DotGraph::vertices )::value_type::se
   return std::nullopt; // Attribute is present
 }
 
-std::vector<ConversionError>
-ExpectAttributesToBePresent( const decltype( DotGraph::vertices )::value_type::second_type& vertex,
-                             const std::vector<std::string>&                                attributes )
+std::optional<ConversionError> ExpectAttributeToBePresent( const decltype( DotGraph::edges )::value_type& edge,
+                                                           const std::string& attributeName )
+{
+  if ( edge.attributes.find( attributeName ) == edge.attributes.end() )
+  {
+    return ConversionError{ fmt::format(
+        "Missing required attribute: {} in Edge: {}", attributeName, edge.source + " -> " + edge.target ) };
+  }
+  return std::nullopt; // Attribute is present
+}
+
+template <class T>
+std::vector<ConversionError> ExpectAttributesToBePresent( const T& vertex, const std::vector<std::string>& attributes )
 {
   std::vector<ConversionError> errors;
   for ( const auto& attr : attributes )
@@ -447,7 +468,12 @@ VerifyTimingMessageAttributes( const decltype( DotGraph::vertices )::value_type:
   return errors;
 }
 
-std::vector<ConversionError>
+/**
+ * Verify that the mandatory attributes of a node in the schedule graph exist.
+ *
+ * @param vertex The vertex to verify.
+ */
+[[nodiscard]] std::vector<ConversionError>
 VerifyNodeAttributes( const decltype( DotGraph::vertices )::value_type::second_type& vertex )
 {
   constexpr std::string_view errorMsg( "Missing required attribute: {} in Vertex: {}" );
@@ -486,59 +512,103 @@ VerifyNodeAttributes( const decltype( DotGraph::vertices )::value_type::second_t
 
   if ( type == carpeDM::VertexType::Block || type == carpeDM::VertexType::BlockAlign )
   {
-    if ( vertex.attributes.find( "tperiod" ) == vertex.attributes.end() )
-    {
-      return { ConversionError{ fmt::format( errorMsg, "tperiod", vertex.id ) } };
-    }
-    // rest of the attributes are optional for Block and BLockAlign
+    auto blockValidationErrors = ExpectAttributesToBePresent( vertex, { "tperiod" } );
+    std::move( blockValidationErrors.begin(), blockValidationErrors.end(), std::back_inserter( collectedErrors ) );
   }
-
-  if ( type == carpeDM::VertexType::Origin )
+  else if ( type == carpeDM::VertexType::Origin )
   {
-    if ( vertex.attributes.find( "thread" ) == vertex.attributes.end() )
-    {
-      return { ConversionError{ fmt::format( errorMsg, "thread", vertex.id ) } };
-    }
+    auto originValidationErrors = ExpectAttributesToBePresent( vertex, { "thread" } );
+    std::move( originValidationErrors.begin(), originValidationErrors.end(), std::back_inserter( collectedErrors ) );
   }
-
-  if ( carpeDM::VertexType::Tmsg == type )
+  else if ( type == carpeDM::VertexType::StartThread )
+  {
+    auto startThreadValidationErrors = ExpectAttributesToBePresent( vertex, { "thread", "startoffs" } );
+    std::move(
+        startThreadValidationErrors.begin(), startThreadValidationErrors.end(), std::back_inserter( collectedErrors ) );
+  }
+  else if ( carpeDM::VertexType::Tmsg == type )
   {
     auto verificationErrors = VerifyTimingMessageAttributes( vertex );
     std::move( verificationErrors.begin(), verificationErrors.end(), std::back_inserter( collectedErrors ) );
   }
 
-  // Additional checks for specific types can be added here if needed
-
   return collectedErrors; // All checks passed
+}
+
+/**
+ * Verify that the mandatory attributes of an edge in the schedule graph exist.
+ */
+[[nodiscard]] std::vector<ConversionError> VerifyEdgeAttributes( const decltype( DotGraph::edges )::value_type& edge )
+{
+  return ExpectAttributesToBePresent( edge, { "type" } );
+}
+
+// Default implementation for setting an edge on a node type. By default we throw an error.
+template <EdgeType EType>
+std::optional<ConversionError>
+SetEdge( ScheduleGraphNode& srcNode, uint32_t dstHash, const decltype( DotGraphEdge::attributes )& attributes )
+{
+  return std::visit(
+      [&]( auto&& node ) -> ConversionError
+      {
+        return ConversionError{ fmt::format(
+            "Edge type '{}' not supported for source node type '{}'", attributes.at( "type" ), node.name ) };
+      },
+      srcNode );
+}
+
+template <>
+std::optional<ConversionError> SetEdge<EdgeType::defdst>( ScheduleGraphNode&                          srcNode,
+                                                          uint32_t                                    dstHash,
+                                                          const decltype( DotGraphEdge::attributes )& attributes )
+{
+  std::visit(
+      [&]( auto&& node )
+      {
+        node.defaultDestination = dstHash;
+      },
+      srcNode );
+  return std::nullopt;
+}
+
+[[nodiscard]] std::optional<ConversionError> SetEdge( ScheduleGraphNode&                          srcNode,
+                                                      ScheduleGraphNode&                          dstNode,
+                                                      const decltype( DotGraphEdge::attributes )& attributes )
+{
+  auto potentialType =
+      magic_enum::enum_cast<carpeDM::EdgeType>( attributes.at( "type" ), magic_enum::case_insensitive );
+  if ( !potentialType.has_value() )
+  {
+    return ConversionError{ fmt::format( "Invalid edge type: {} in Edge: {}",
+                                         attributes.at( "type" ),
+                                         GetNodeName( srcNode ) + " -> " + GetNodeName( dstNode ) ) };
+  }
+  switch ( potentialType.value() )
+  {
+  case EdgeType::defdst:
+    return SetEdge<EdgeType::defdst>( srcNode, GetNodeHash( dstNode ), attributes );
+  }
+
+  return ConversionError{ fmt::format( "Unsupported edge type: {} in Edge: {}",
+                                       attributes.at( "type" ),
+                                       GetNodeName( srcNode ) + " -> " + GetNodeName( dstNode ) ) };
 }
 
 } // namespace
 
-ScheduleGraph::ScheduleGraph( std::string name )
+ScheduleGraph::ScheduleGraph( std::string                                 name,
+                              std::vector<ScheduleGraphNode>&&            nodes,
+                              std::unordered_map<uint32_t, std::string>&& nodeNames,
+                              std::unordered_map<uint32_t, size_t>&&      nodeIndex )
     : m_name( std::move( name ) )
+    , m_nodes( std::move( nodes ) )
+    , m_nodeNames( std::move( nodeNames ) )
+    , m_nodeIndex( std::move( nodeIndex ) )
 {
-}
-
-void ScheduleGraph::setNodes( std::vector<ScheduleGraphNode> nodes )
-{
-  m_nodes = std::move( nodes );
-  m_nodeIndex.clear();
-  for ( size_t i = 0; i < m_nodes.size(); ++i )
-  {
-    auto hash = std::visit(
-        []( const auto& node )
-        {
-          return fnv1a_hash( node.name );
-        },
-        m_nodes[i] );
-    m_nodeIndex[hash] = i;
-  }
 }
 
 std::variant<ScheduleGraph, ConversionError> ScheduleGraph::fromDotGraph( const DotGraph& dotGraph )
 {
-  ScheduleGraph graph( dotGraph.properties.name );
-
   std::vector<ScheduleGraphNode> nodes;
   std::vector<ConversionError>   errors;
 
@@ -551,17 +621,30 @@ std::variant<ScheduleGraph, ConversionError> ScheduleGraph::fromDotGraph( const 
     }
   }
 
-  if ( errors.size() > 0 )
+  for ( const auto& edge : dotGraph.edges )
   {
-    auto combinedErrors = std::accumulate( errors.begin(),
-                                           errors.end(),
-                                           std::string{},
-                                           []( const std::string& acc, const ConversionError& err )
-                                           {
-                                             return acc.empty() ? err.message : acc + ",\n" + err.message;
-                                           } );
+    auto error = VerifyEdgeAttributes( edge );
+    if ( error.size() > 0 )
+    {
+      std::move( error.begin(), error.end(), std::back_inserter( errors ) );
+    }
+  }
 
-    return ConversionError{ fmt::format( "Errors found in DotGraph: {}", combinedErrors ) };
+  auto concatenatedErrors = ConcatenateErrors( errors );
+  if ( concatenatedErrors.has_value() )
+  {
+    return ConversionError{ fmt::format( "Errors found in DotGraph:\n{}", concatenatedErrors->message ) };
+  }
+
+  size_t                                 index = 0;
+  decltype( ScheduleGraph::m_nodeNames ) nodeNames;
+  decltype( ScheduleGraph::m_nodeIndex ) nodeIndex;
+
+  for ( const auto& [name, vertex] : dotGraph.vertices )
+  {
+    auto hash       = fnv1a_hash( vertex.id );
+    nodeNames[hash] = vertex.id;
+    nodeIndex[hash] = index++;
   }
 
   std::transform( dotGraph.vertices.begin(),
@@ -571,6 +654,30 @@ std::variant<ScheduleGraph, ConversionError> ScheduleGraph::fromDotGraph( const 
                   {
                     return GenericParseGraphNode( element.second );
                   } );
-  graph.setNodes( std::move( nodes ) );
+
+  for ( const auto& edge : dotGraph.edges )
+  {
+    auto srcHash = fnv1a_hash( edge.source );
+    auto dstHash = fnv1a_hash( edge.target );
+
+    if ( nodeIndex.find( srcHash ) == nodeIndex.end() )
+    {
+      return ConversionError{ fmt::format( "Edge source node '{}' not found in vertices", edge.source ) };
+    }
+    if ( nodeIndex.find( dstHash ) == nodeIndex.end() )
+    {
+      return ConversionError{ fmt::format( "Edge target node '{}' not found in vertices", edge.target ) };
+    }
+
+    auto& srcNode        = nodes.at( nodeIndex.at( srcHash ) );
+    auto& dstNode        = nodes.at( nodeIndex.at( dstHash ) );
+    auto  potentialError = SetEdge( srcNode, dstNode, edge.attributes );
+    if ( potentialError.has_value() )
+    {
+      errors.emplace_back( std::move( *potentialError ) );
+    }
+  }
+
+  ScheduleGraph graph( dotGraph.properties.name, std::move( nodes ), std::move( nodeNames ), std::move( nodeIndex ) );
   return graph;
 }

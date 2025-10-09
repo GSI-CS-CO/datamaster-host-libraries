@@ -3,6 +3,12 @@ project(datamaster-tools)
 set(TOOL_VER "0.39.1")
 cmake_minimum_required(VERSION 3.21)
 
+CPMAddPackage(
+    NAME magic_enum
+    GITHUB_REPOSITORY Neargye/magic_enum
+    GIT_TAG v0.9.7
+)
+
 find_package(Boost COMPONENTS program_options serialization REQUIRED)
 
 string(TIMESTAMP BUILD_DATE "%Y%m%d")
@@ -13,67 +19,36 @@ configure_file(
     @ONLY
 )
 
-add_executable(dm-cmd 
-    ${PROJECT_SOURCE_DIR}/src/dm-cmd.cpp
-)
+function(add_tool name)
+    add_executable(${name} 
+        ${PROJECT_SOURCE_DIR}/src/${name}.cpp
+    )
 
-add_executable(dm-sched 
-    ${PROJECT_SOURCE_DIR}/src/dm-sched.cpp
-)
+    target_include_directories(
+        ${name}
+        PRIVATE
+            ${PROJECT_BINARY_DIR}
+            ${magic_enum_SOURCE_DIR}/include
+    )
 
-target_link_libraries(dm-cmd 
-    PUBLIC datamaster-common
-    carpedm
-)
+    target_link_libraries(${name} 
+        PUBLIC datamaster-common
+        carpedm
+        magic_enum::magic_enum
+       ${Boost_LIBRARIES}
+    )
+endfunction()
 
-target_include_directories(
-    dm-cmd
-    PRIVATE
-        ${PROJECT_BINARY_DIR}
-)
+set(TOOLS dm-cmd dm-sched dm-sched2 dm-validate dm-validate-new dm-reduce md-test)
 
-target_include_directories(
-    dm-sched
-    PRIVATE
-        ${PROJECT_BINARY_DIR}
-)
+foreach(tool IN LISTS TOOLS)
+    add_tool(${tool})
+endforeach()
 
-
-target_link_libraries(dm-sched 
-    PUBLIC datamaster-common
-    carpedm
-)
-
-add_executable(dm-validate 
-    ${PROJECT_SOURCE_DIR}/src/dm-validate.cpp
-)
-
-target_link_libraries(dm-validate 
-    PUBLIC datamaster-common
-    carpedm
-   ${Boost_LIBRARIES}
-)
-target_include_directories(
-    dm-validate
-    PRIVATE
-        ${PROJECT_BINARY_DIR}
-)
-
-add_executable(dm-reduce 
-    ${PROJECT_SOURCE_DIR}/src/dm-reduce.cpp
-)
-
-target_link_libraries(dm-reduce 
-    PUBLIC datamaster-common
-    carpedm
-   ${Boost_LIBRARIES}
-)
-target_include_directories(
-    dm-reduce
-    PRIVATE
-        ${PROJECT_BINARY_DIR}
+add_executable(pack-logs
+    ${PROJECT_SOURCE_DIR}/src/pack-logs.cpp
 )
 
 install(
-    TARGETS dm-cmd dm-sched dm-validate dm-reduce
+    TARGETS ${TOOLS} pack-logs
 )

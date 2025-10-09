@@ -83,9 +83,58 @@
         "forward_list": "cpp",
         "regex": "cpp",
         "span": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "charconv": "cpp",
+        "source_location": "cpp",
+        "format": "cpp",
+        "shared_mutex": "cpp",
+        "expected": "cpp",
+        "ranges": "cpp"
     },
-    "testMate.cpp.test.executables": "bin/datamaster_tests",
-    "terminal.integrated.shellIntegration.enabled": false,
-    "terminal.integrated.gpuAcceleration": "canvas"
+    "editor.tokenColorCustomizations": {
+        "[*Light*]": {
+            "textMateRules": [
+                {
+                    "scope": "ref.matchtext",
+                    "settings": {
+                        "foreground": "#000"
+                    }
+                }
+            ]
+        },
+        "[*Dark*]": {
+            "textMateRules": [
+                {
+                    "scope": "ref.matchtext",
+                    "settings": {
+                        "foreground": "#fff"
+                    }
+                }
+            ]
+        },
+        "textMateRules": [
+            {
+                "scope": "googletest.failed",
+                "settings": {
+                    "foreground": "#f00"
+                }
+            },
+            {
+                "scope": "googletest.passed",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            },
+            {
+                "scope": "googletest.run",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            }
+        ]
+    },
+    "gtest-adapter.debugConfig": [
+        "Launch tests"
+    ],
+    "testMate.cpp.test.executables": "bin/*[tT]est*"
 }

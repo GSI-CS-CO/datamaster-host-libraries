@@ -67,7 +67,8 @@ set(CONFIG_SHAREDSIZE "98304")
 
 # stack size is used to check for stack overflows, project Makefile can override it
 set(CONFIG_STACKSIZE "10240")
-set(CMAKE_C_FLAGS "-mmultiply-enabled -mbarrel-shift-enabled -Os -DUSRCPUCLK=${USRCPUCLK} -std=gnu99 -DCONFIG_WR_NODE -DCONFIG_PRINT_BUFSIZE=128 -DCONFIG_PRINTF_64BIT -DSDBFS_BIG_ENDIAN -ffunction-sections -fdata-sections -Wl,--gc-sections")
+set(CMAKE_C_FLAGS_DEBUG "-mmultiply-enabled -mbarrel-shift-enabled -Os -DUSRCPUCLK=${USRCPUCLK} -std=gnu99 -DCONFIG_WR_NODE -DCONFIG_PRINT_BUFSIZE=128 -DCONFIG_PRINTF_64BIT -DSDBFS_BIG_ENDIAN -ffunction-sections -fdata-sections -Wl,--gc-sections")
+set(CMAKE_C_FLAGS_RELEASE "-mmultiply-enabled -mbarrel-shift-enabled -Os -DUSRCPUCLK=${USRCPUCLK} -std=gnu99 -DCONFIG_WR_NODE -DCONFIG_PRINT_BUFSIZE=128 -DCONFIG_PRINTF_64BIT -DSDBFS_BIG_ENDIAN -ffunction-sections -fdata-sections -Wl,--gc-sections")
 
 
 set(SHARED_SIZE "98304")
@@ -153,7 +154,7 @@ target_link_libraries(
 
 
 # set linker flags for project
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib -T ram.ld")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib -T ram.ld -fno-lto")
 
 target_compile_options(${PROJECT_NAME} PRIVATE -DDIAGNOSTICS -DCONFIG_ASSERT )
 

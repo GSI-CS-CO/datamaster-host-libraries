@@ -6,3 +6,5 @@ bin/
 .vscode-server
 __pycache__/
 *.py[cod]
+
+**/__pycache__/

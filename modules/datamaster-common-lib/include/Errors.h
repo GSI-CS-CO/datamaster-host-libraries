@@ -19,4 +19,9 @@ struct FilterGraphError
   std::string message;
 };
 
+struct ConnectionError
+{
+  std::string message;
+};
+
 } // namespace carpeDM

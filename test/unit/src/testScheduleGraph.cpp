@@ -132,7 +132,7 @@ TEST( ScheduleGraphFromDot, ValidGraphCreatesScheduleGraph )
   std::string input       = R"graph(
 digraph G {
 A [type="Block" pattern="default" beamproc="default" cpu="0" flags="0x0" tPeriod="1000"];
-B [type="tmsg", cpu="0",  pattern="SA_20240709145503389_DEFAULT", toffs="500000", id="0x112c0ff000000000", fid="1", gid="300", evtno="255", sid="0", bpid="0", reqnobeam="0", vacc="0", par="0x0000000000000000"];A -> B;
+B [type="tmsg", cpu="0",  pattern="SA_20240709145503389_DEFAULT", toffs="500000", id="0x112c0ff000000000", fid="1", gid="300", evtno="255", sid="0", bpid="0", reqnobeam="0", vacc="0", par="0x0000000000000000"];
 }
 )graph";
   auto        parseResult = TryConvertDotGraph( input );
@@ -325,3 +325,102 @@ INSTANTIATE_TEST_SUITE_P( CommandMissingAttributes,
                           ScheduleGraphCommandValidation,
                           ::testing::Combine( ::testing::Values( "noop", "flow", "flush", "wait" ),
                                               ::testing::Values( "type", "pattern", "cpu", "toffs" ) ) );
+
+class ScheduleGraphOriginValidation : public ::testing::TestWithParam<std::string>
+{
+};
+
+static std::unordered_map<std::string, std::string> ORIGIN_DEFAULT_ATTRIBUTES = {
+  { "type", "Origin" }, { "pattern", "default" }, { "cpu", "0" }, { "toffs", "500000" }, { "thread", "1" },
+};
+
+TEST_P( ScheduleGraphOriginValidation, OriginMissingAttributeCausesError )
+{
+  const auto& attr = GetParam();
+
+  auto attrs = ORIGIN_DEFAULT_ATTRIBUTES;
+  attrs.erase( attr ); // Remove the attribute to test
+
+  auto attributesConcatenated = ConcatenateAttributes( attrs );
+
+  const std::string dotStr = "digraph G { A " + attributesConcatenated + " }";
+
+  auto err = TryConvertDotGraph( dotStr );
+  EXPECT_TRUE( std::holds_alternative<carpeDM::ConversionError>( err ) );
+  EXPECT_NE( std::get<carpeDM::ConversionError>( err ).message.find( attr ), std::string::npos );
+}
+
+INSTANTIATE_TEST_CASE_P( OriginMissingAttributes,
+                         ScheduleGraphOriginValidation,
+                         ::testing::Values( "type", "pattern", "cpu", "toffs", "thread" ) );
+
+class ScheduleGraphStartThreadValidation : public ::testing::TestWithParam<std::string>
+{
+};
+
+static std::unordered_map<std::string, std::string> STARTTHREAD_DEFAULT_ATTRIBUTES = {
+  { "type", "StartThread" }, { "pattern", "default" }, { "cpu", "0" },
+  { "toffs", "500000" },     { "thread", "1" },        { "startoffs", "1000" },
+};
+
+TEST_P( ScheduleGraphStartThreadValidation, StartThreadMissingAttributeCausesError )
+{
+  const auto& attr = GetParam();
+
+  auto attrs = STARTTHREAD_DEFAULT_ATTRIBUTES;
+  attrs.erase( attr ); // Remove the attribute to test
+
+  auto attributesConcatenated = ConcatenateAttributes( attrs );
+
+  const std::string dotStr = "digraph G { A " + attributesConcatenated + " }";
+
+  auto err = TryConvertDotGraph( dotStr );
+  EXPECT_TRUE( std::holds_alternative<carpeDM::ConversionError>( err ) );
+  EXPECT_NE( std::get<carpeDM::ConversionError>( err ).message.find( attr ), std::string::npos );
+}
+
+INSTANTIATE_TEST_CASE_P( StartThreadMissingAttributes,
+                         ScheduleGraphStartThreadValidation,
+                         ::testing::Values( "type", "pattern", "cpu", "toffs", "thread", "startoffs" ) );
+
+TEST( ScheduleGraphFromDot, DefDstEdgeSetCorrectly )
+{
+  std::string input = R"graph(
+digraph G {
+A [type="Block" pattern="default" beamproc="default" cpu="0" flags="0x0" tPeriod="1000"];
+B [type="tmsg", cpu="0",  pattern="SA_20240709145503389_DEFAULT", toffs="500000", id="0x112c0ff000000000", fid="1", gid="300", evtno="255", sid="0", bpid="0", reqnobeam="0", vacc="0", par="0x0000000000000000"];
+C [type="tmsg", cpu="0",  pattern="SA_20240709145503389_DEFAULT", toffs="600000", id="0x112c0ff000000001", fid="1", gid="301", evtno="255", sid="0", bpid="0", reqnobeam="0", vacc="0", par="0x0000000000000001"];
+A -> B [type="defdst"];
+B -> C [type="defdst"];
+})graph";
+
+  auto parseResult = TryConvertDotGraph( input );
+  EXPECT_TRUE( std::holds_alternative<carpeDM::ScheduleGraph>( parseResult ) );
+  auto& sg = std::get<carpeDM::ScheduleGraph>( parseResult );
+  EXPECT_EQ( sg.getName(), "G" );
+
+  const auto blockNode = sg.getNodeByName( "A" );
+  EXPECT_NE( blockNode, nullptr );
+  const auto& block = ( *blockNode );
+  EXPECT_TRUE( std::holds_alternative<carpeDM::Block>( block ) );
+  auto blockAsBlock = std::get<carpeDM::Block>( block );
+  EXPECT_EQ( blockAsBlock.name, "A" );
+
+  const auto tmsgNode = sg.getNodeByName( "B" );
+  EXPECT_NE( tmsgNode, nullptr );
+  const auto& tmsg = ( *tmsgNode );
+  EXPECT_TRUE( std::holds_alternative<carpeDM::TimingMessage>( tmsg ) );
+  auto tmsgAsTmsg = std::get<carpeDM::TimingMessage>( tmsg );
+  EXPECT_EQ( tmsgAsTmsg.name, "B" );
+
+  const auto tmsg2Node = sg.getNodeByName( "C" );
+  EXPECT_NE( tmsg2Node, nullptr );
+  const auto& tmsg2 = ( *tmsg2Node );
+  EXPECT_TRUE( std::holds_alternative<carpeDM::TimingMessage>( tmsg2 ) );
+  auto tmsg2AsTmsg = std::get<carpeDM::TimingMessage>( tmsg2 );
+  EXPECT_EQ( tmsg2AsTmsg.name, "C" );
+
+  EXPECT_EQ( blockAsBlock.defaultDestination, carpeDM::GetNodeHash( tmsgAsTmsg ) );
+  EXPECT_EQ( tmsgAsTmsg.defaultDestination, carpeDM::GetNodeHash( tmsg2AsTmsg ) );
+  EXPECT_EQ( tmsg2AsTmsg.defaultDestination, carpeDM::INVALID_NODE_HASH );
+}

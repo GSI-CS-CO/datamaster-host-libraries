@@ -1,0 +1,32 @@
+# Section 1: First I/O sequence (start)
+1759301088.177029 poll([{fd=7, events=POLLOUT|POLLHUP}], 1, -1) = 1 ([{fd=7, revents=POLLOUT}])
+1759301088.177517 write(7, "\f\0\0\0", 4) = 4                                                    # +0.488ms
+1759301088.177996 write(7, ".\0\0\0\0\0\0\0\2\0\0\0", 12) = 12                                   # +0.479ms
+1759301088.178460 poll([{fd=7, events=POLLIN|POLLHUP}], 1, -1) = 1 ([{fd=7, revents=POLLIN}])   # +0.464ms
+1759301088.178874 read(7, "\20\0\0\0", 4) = 4                                                    # +0.414ms
+1759301088.179218 read(7, "\0\0\0\0xxxx :\23[\rKj\30", 16) = 16                                  # +0.344ms
+# Section 1 total duration: 2.189ms
+
+# Section 2: Second I/O sequence (+2.720ms from previous section end)
+1759301088.181938 poll([{fd=7, events=POLLOUT|POLLHUP}], 1, -1) = 1 ([{fd=7, revents=POLLOUT}])
+1759301088.182322 write(7, "\f\0\0\0", 4) = 4                                                    # +0.384ms
+1759301088.182823 write(7, ".\0\0\0\0\0\0\0\2\0\0\0", 12) = 12                                   # +0.501ms
+1759301088.183228 poll([{fd=7, events=POLLIN|POLLHUP}], 1, -1) = 1 ([{fd=7, revents=POLLIN}])   # +0.405ms
+1759301088.183791 read(7, "\20\0\0\0", 4) = 4                                                    # +0.563ms
+1759301088.184140 read(7, "\0\0\0\0xxxxh\353\\[\rKj\30", 16) = 16                                # +0.349ms
+# Section 2 total duration: 2.202ms
+
+# Section 3: Third I/O sequence (+2.917ms from previous section end)
+1759301088.187057 poll([{fd=7, events=POLLOUT|POLLHUP}], 1, -1) = 1 ([{fd=7, revents=POLLOUT}])
+1759301088.187531 write(7, "\f\0\0\0", 4) = 4                                                    # +0.474ms
+1759301088.187937 write(7, ".\0\0\0\0\0\0\0\2\0\0\0", 12) = 12                                   # +0.406ms
+1759301088.188339 poll([{fd=7, events=POLLIN|POLLHUP}], 1, -1) = 1 ([{fd=7, revents=POLLIN}])   # +0.402ms
+1759301088.188816 read(7, "\20\0\0\0", 4) = 4                                                    # +0.477ms
+1759301088.189158 read(7, "\0\0\0\0xxxx\230\352\252[\rKj\30", 16) = 16                            # +0.342ms
+# Section 3 total duration: 2.101ms
+
+# Summary:
+# - Each section follows the same pattern: poll(POLLOUT) -> write -> write -> poll(POLLIN) -> read -> read
+# - Gap between sections: ~2.7-2.9ms
+# - Individual section durations: ~2.1-2.2ms
+# - Total analyzed timespan: 12.129ms

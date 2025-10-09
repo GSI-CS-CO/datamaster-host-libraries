@@ -5,10 +5,18 @@
 #include "Errors.h"
 #include "ScheduleGraphTypes.h"
 
+#include <memory>
 #include <variant>
 
 namespace carpeDM
 {
+
+constexpr uint32_t META  = 2;
+constexpr uint32_t EVENT = 1000;
+// 10 for now?! was 110, I do not know why we would need that many
+constexpr uint32_t DST   = 110;
+constexpr uint32_t DSTLL = 8;
+constexpr uint32_t REF   = 3;
 
 class DotGraph;
 
@@ -18,11 +26,54 @@ typedef uint32_t node_hash_t;
 // quintillion."
 constexpr node_hash_t INVALID_NODE_HASH = 0;
 
+enum class EdgeType
+{
+  listdst,
+  defdst,
+  altdst,
+  baddefdst,
+  target,
+  switchdst,
+  origindst,
+  flowdst,
+  flushovr,
+
+  dynflowdst,
+  resflowdst,
+  domflowdst
+};
+
+enum class ReferenceEdgeType
+{
+  address,
+  reference,
+  reference2
+};
+
+class SimpleEdge
+{
+private:
+  node_hash_t target;
+  EdgeType    m_type;
+};
+
+class ReferenceEdge
+{
+private:
+  node_hash_t       target;
+  uint32_t          fieldHead;
+  uint32_t          fieldTail;
+  uint32_t          bitWidth;
+  ReferenceEdgeType m_type;
+};
+
 struct __attribute__( ( packed ) ) NodeFlags
 {
-  union {
+  union
+  {
     uint32_t raw; // Raw flags as a 32-bit integer
-    struct {      
+    struct
+    {
       // Node type (e.g., Event, Block, etc.)
       uint32_t type : 8;
 
@@ -56,7 +107,7 @@ struct __attribute__( ( packed ) ) NodeFlags
       uint32_t _padding : 2;
 
       uint32_t specific : 5; // Type-specific bits (bits 28-31)
-    } content; // Content of the flags, packed into a struct
+    } content;               // Content of the flags, packed into a struct
   };
 };
 
@@ -68,71 +119,101 @@ static_assert( sizeof( NodeFlags ) == sizeof( uint32_t ), "NodeFlags must be 4 b
  */
 struct Node
 {
-  // Indices
-  std::string name     = "";
-  uint32_t    hash     = 0;
+  uint32_t    hash = 0;
+  std::string name; // Node name
 
-  // Mandatory 
-  uint8_t     cpu      = 0;
-  std::string pattern  = "";
+  // Mandatory
+  uint8_t     cpu     = 0;
+  std::string pattern = "";
 
   // Optional
-  std::string beamproc = "";
+  std::string beamproc           = "";
   node_hash_t defaultDestination = INVALID_NODE_HASH;
+  // std::unique_ptr<AltDstList> altDest;
 
   // Node flags, packed into a 32-bit integer
   // How these are seet depends on the actual type of node
   // The node is encoded into the flags, which is the only mandatory field
-  NodeFlags flags; 
+  NodeFlags flags;
 };
 
 struct Event : public Node
 {
-  uint64_t tOffs;
+  node_hash_t target = INVALID_NODE_HASH;
+  uint64_t    tOffs;
 };
 
-// Timing Message struct (corresponds to TimingMsg class)
 struct TimingMessage : public Event
 {
   uint64_t id;
   uint64_t par;
+
+  // timing extension field - subnano second portion of toffs
   uint32_t tef;
+
+  // reserved field - currently unused
   uint32_t res;
+
+  std::vector<ReferenceEdgeType> references;
 };
 
-// Switch struct (corresponds to Switch class)
 struct Switch : public Event
 {
+  std::vector<EdgeType> edges;
+
+  // New default destination for the target node
+  node_hash_t dest = INVALID_NODE_HASH;
 };
 
-// Origin struct (corresponds to Origin class)
 struct Origin : public Event
 {
+
+  // threadIdx
   uint32_t thread;
+
+  // New origin node for the target thread
+  // Currerntly does not need to be entry or exist point
+  // Mabye change later? As a developer we may still want to be able to use any node
+  node_hash_t dest;
 };
 
-// StartThread struct (corresponds to StartThread class)
 struct StartThread : public Event
 {
+  // thread start time - absolute time when to start the thread
+  // @todo(mdennst): Needs to be renamed
   uint64_t startOffs;
+
+  // threadIdx
   uint32_t thread;
 };
 
-// Block struct (corresponds to Block class)
 struct Block : public Node
 {
+  // Block period in ns
   uint64_t tPeriod = 0;
-  uint8_t  rdIdxIl = 0;
-  uint8_t  rdIdxHi = 0;
-  uint8_t  rdIdxLo = 0;
-  uint8_t  wrIdxIl = 0;
-  uint8_t  wrIdxHi = 0;
-  uint8_t  wrIdxLo = 0;
+
+  bool align = false;
+
+  // Prio queue
+  uint8_t rdIdxIl = 0;
+  uint8_t rdIdxHi = 0;
+  uint8_t rdIdxLo = 0;
+  uint8_t wrIdxIl = 0;
+  uint8_t wrIdxHi = 0;
+  uint8_t wrIdxLo = 0;
+
+  // List of possible alternative destinations for flow commands
+  // EdgeContainer<DST> altDest;
+
+  // EdgeContainer<REF> address;
+  // EdgeContainer<REF> reference;
+  // EdgeContainer<REF> reference2;
 };
 
 // Base Command struct (corresponds to Command class)
 struct Command : public Event
 {
+  // time after this command becomes valid
   uint64_t tValid;
 
   // Concrete bitfield breakdown of the 'act' field
@@ -145,45 +226,36 @@ struct Command : public Event
     uint32_t chp      : 1;  // ACT_CHP_MSK (bit 27)
     uint32_t specific : 4;  // Type-specific bits (bits 28-31)
   } act;
+
+  // interpret tvalid absolute or relative to current time sum
+  bool absoluteValidTime;
+
+  // target block
+  node_hash_t commandTarget;
 };
 
 // NoOp Command struct (corresponds to Noop class)
 struct NoOp : public Command
 {
-  // act field breakdown for NoOp:
-  // - qty: number of times to execute
-  // - type: ACT_TYPE_NOOP (1)
-  // - prio: priority queue (0=LO, 1=HI, 2=IL)
-  // - vabs: whether tValid is absolute (0) or relative (1)
-  // - chp: unused for NoOp (should be 0)
-  // - specific: unused for NoOp (should be 0)
 };
 
 // Flow Command struct (corresponds to Flow class)
 struct Flow : public Command
 {
-  // act field breakdown for Flow:
-  // - qty: number of times to execute
-  // - type: ACT_TYPE_FLOW (2)
-  // - prio: priority queue (0=LO, 1=HI, 2=IL)
-  // - vabs: whether tValid is absolute (0) or relative (1)
-  // - chp: whether change is permanent (1) or temporary (0)
-  // - specific: unused for Flow (should be 0)
+  // Change the defdst permanently or just once
+  bool permanent;
+
+  // new defdst of target block
+  node_hash_t dest;
 };
 
 // Wait Command struct (corresponds to Wait class)
 struct Wait : public Command
 {
-  uint64_t tWait;
+  // @todo(mdennst): check if a flag exists that allow to switch between relative and absolute wait time
 
-  // act field breakdown for Wait:
-  // - qty: always 1 for Wait commands
-  // - type: ACT_TYPE_WAIT (4)
-  // - prio: priority queue (0=LO, 1=HI, 2=IL)
-  // - vabs: whether tValid is absolute (0) or relative (1)
-  // - chp: whether change is permanent (1) or temporary (0)
-  // - specific[0]: ACT_WAIT_ABS - whether tWait is absolute (1) or relative to tPeriod (0)
-  // - specific[1-3]: unused (should be 0)
+  // wait time
+  uint64_t tWait;
 };
 
 // Flush Command struct (corresponds to Flush class)
@@ -199,19 +271,16 @@ struct Flush : public Command
   uint8_t frmHi, toHi;
   uint8_t frmLo, toLo;
 
-  // act field breakdown for Flush:
-  // - qty: always 1 for Flush commands
-  // - type: ACT_TYPE_FLUSH (3)
-  // - prio: priority queue (0=LO, 1=HI, 2=IL)
-  // - vabs: whether tValid is absolute (0) or relative (1)
-  // - chp: whether change is permanent (1) or temporary (0)
-  // - specific[0-2]: ACT_FLUSH_PRIO - which queues to flush (bit 0=LO, bit 1=HI, bit 2=IL)
-  // - specific[3]: unused (should be 0)
+  // Flush overwrite
+  // @todo(mdennst): Check what this is used for
+  // Potentially: if set, the flush command does not go to the default successor, but to this node instead
+  node_hash_t flushOvr;
 };
 
 // Meta node structs (for generated metadata)
 struct Global : public Node
 {
+  // Section name for global settings
   std::string section;
 };
 
@@ -255,20 +324,37 @@ inline uint32_t fnv1a_hash( const std::string& data )
   return hash;
 }
 
+template <typename T>
+decltype( auto ) GetFromNode( const ScheduleGraphNode& node, T Node::*member )
+{
+  return std::visit(
+      [&]( const auto& n ) -> decltype( auto )
+      {
+        return n.*member;
+      },
+      node );
+}
+
+inline const std::string& GetNodeName( const ScheduleGraphNode& node )
+{
+  return GetFromNode( node, &Node::name );
+}
+
+inline const decltype( Node::hash ) GetNodeHash( const ScheduleGraphNode& node )
+{
+  return GetFromNode( node, &Node::hash );
+}
+
 class DATAMASTER_COMMON_LIB_EXPORT ScheduleGraph
 {
 public:
-  ScheduleGraph( std::string name );
+  static std::variant<ScheduleGraph, ConversionError> fromDotGraph( const DotGraph& dotGraph );
   ~ScheduleGraph() = default;
 
   inline const std::string& getName() const
   {
     return m_name;
   }
-
-  void setNodes( std::vector<ScheduleGraphNode> nodes );
-
-  static std::variant<ScheduleGraph, ConversionError> fromDotGraph( const DotGraph& dotGraph );
 
   inline const ScheduleGraphNode* const getNodeByName( const std::string& name ) const
   {
@@ -300,8 +386,18 @@ public:
   }
 
 private:
-  std::unordered_map<uint32_t, size_t> m_nodeIndex; // Maps node hash to index in m_nodes
-  std::vector<ScheduleGraphNode>       m_nodes;
-  std::string                          m_name;
+  ScheduleGraph( std::string                                 name,
+                 std::vector<ScheduleGraphNode>&&            nodes,
+                 std::unordered_map<uint32_t, std::string>&& nodeNames,
+                 std::unordered_map<uint32_t, size_t>&&      nodeIndex );
+
+private:
+  std::unordered_map<uint32_t, std::string> m_nodeNames; // Maps node hash to node name
+
+  std::unordered_map<uint32_t, size_t>      m_nodeIndex;    // Maps node hash to index in m_nodes
+  std::unordered_map<uint32_t, std::string> m_nodePatterns; // Maps pattern name to pattern hash
+
+  std::vector<ScheduleGraphNode> m_nodes;
+  std::string                    m_name;
 };
 } // namespace carpeDM

@@ -41,6 +41,16 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/src
 )
 
+add_executable(LexerTest
+    ${PROJECT_SOURCE_DIR}/src/datalang/LexerTest.cpp
+)
+
+target_link_libraries(
+    LexerTest
+    GTest::gtest_main
+    datalang
+)
 
 include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME})
+gtest_discover_tests(LexerTest)
