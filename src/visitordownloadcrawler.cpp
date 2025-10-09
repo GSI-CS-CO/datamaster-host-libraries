@@ -3,7 +3,6 @@
 #include "node.h"
 #include "block.h"
 #include "meta.h"
-#include "global.h"
 #include "event.h"
 #include "dotstr.h"
 
@@ -281,7 +280,7 @@ void VisitorDownloadCrawler::setRefLinks() const {
     uint32_t ds = dynOps >> (idx * 3);
     unsigned mode = ds & DYN_MODE_SMSK;
     
-    if(mode >= DYN_MODE_ADR) {
+    if(mode >= DYN_MODE_REF) {
 
       uint32_t width    = (ds & DYN_WIDTH64_SMSK) ? 64 : 32;
       uint32_t oSource  = idx << 2;
@@ -307,10 +306,9 @@ void VisitorDownloadCrawler::setRefLinks() const {
         //Subtract the Target word offset from tmpAdr and we get the node adress
         uint32_t nodeAdr = tmpAdr - oTarget;
         log<DEBUG_LVL2>(L"Trying lookup for tmpAdr %1$#08x Split: node adr: %2$#08x Offset Target: %3$#08x") % tmpAdr % nodeAdr % oTarget;
-        //FIXME Dirty hack - assume it's always CPU# 0 cuz INT addresses are all the same. Replace by using a PEER/EXT address, as it can both be used for ext devices or to determine which CPU RAM we're in
-	auto x = at.lookupAdr(0, nodeAdr);
-
-        boost::add_edge(v, x->v, myEdge(det::sDyn[mode], std::to_string((unsigned)oTarget), std::to_string((unsigned)oSource), std::to_string((unsigned)width)), g);
+        auto x = at.lookupAdr(cpu, nodeAdr);
+        
+        boost::add_edge(v, x->v, myEdge(det::sRef, std::to_string((unsigned)oTarget), std::to_string((unsigned)oSource), std::to_string((unsigned)width)), g);
         log<DEBUG_LVL2>(L"Found Reflink to TargetNode %1%. Offset Source: %2$#08x Offset Target: %3$#08x Width: %4%") % g[x->v].name.c_str() % oSource % oTarget % width;
       } catch(exception& err) {
         throw std::runtime_error( "Error when recreating a byReference/byValue edge from node binary <" + g[v].name + ">. Cause: " + err.what());

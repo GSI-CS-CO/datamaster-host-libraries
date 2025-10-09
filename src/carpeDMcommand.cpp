@@ -19,7 +19,6 @@
 #include "node.h"
 #include "block.h"
 #include "meta.h"
-#include "global.h"
 #include "event.h"
 #include "dotstr.h"
 
@@ -398,7 +397,7 @@ vEbwrs& CarpeDM::CarpeDMimpl::createCommandBurst(vEbwrs& ew, Graph& g) {
     //special treatment for stop (flow to idle == type flow && dst LM32_NULL_PTR)
     uint8_t opType = OP_TYPE_CMD_BASE + ((mc->getAct() >> ACT_TYPE_POS) & ACT_TYPE_MSK);
     if ((((mc->getAct() >> ACT_TYPE_POS) & ACT_TYPE_MSK) == ACT_TYPE_FLOW)
-     && (boost::dynamic_pointer_cast<MiniFlow>(mc)->getDst() == LM32_NULL_PTR)) { opType = OP_TYPE_CMD_STOP; }
+     && (std::dynamic_pointer_cast<MiniFlow>(mc)->getDst() == LM32_NULL_PTR)) { opType = OP_TYPE_CMD_STOP; }
     //FIMXE this should be done for all commands, not just the minis
     createCmdModInfo(ew, getNodeCpu(targetName, TransferDir::DOWNLOAD), 0, opType);
 

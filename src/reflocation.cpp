@@ -22,16 +22,19 @@ void RefLocation::init(EbWrapper* ebd, const uint32_t sharedOffs) {
   ml.clear();
   mf.clear();
 
+  // ebd->getCtlAdr(ADRLUT_SHCTL_REGS) // 60_000
+
   ml.insert({dmv::sZero, 0x0 });                                                      //zero as an always working trst
   ml.insert({dloc::sThrCtl,     sharedOffs + SHCTL_THR_CTL});                         //allows thread start/halt from other platfroms
-  ml.insert({dloc::sRegisters,  sharedOffs + ebd->getCtlAdr(ADRLUT_SHCTL_REGS)});     //'mail boxes' for interplatform communication
+  ml.insert({dloc::sRegisters,  sharedOffs + 60'000});     //'mail boxes' for interplatform communication
 
   //Thread staging areas (pretime, starttime etc). Allows remote manipulation of these parameters (be)for(e) thread starts
-  for(int i=0; i < ebd->getThrQty(); i++) {
+  for(int i=0; i < 32; i++) {
     std::ostringstream oss;
     oss << std::setw(2) << std::setfill('0') << i;
-    ml.insert({dloc::sThrStaging + "_" + oss.str(), sharedOffs + ebd->getCtlAdr(ADRLUT_SHCTL_THR_STA) + i * _T_TS_SIZE_ + T_TS_STARTTIME});
-    ml.insert({dloc::sThrData    + "_" + oss.str(), sharedOffs + ebd->getCtlAdr(ADRLUT_SHCTL_THR_DAT) + i * _T_TD_SIZE_ + T_TD_CURRTIME});
+    ml.insert({dloc::sThrStaging + "_" + oss.str(), sharedOffs + 70'000 + i * _T_TS_SIZE_ + T_TS_STARTTIME});
+    ml.insert({dloc::sThrDataCt    + "_" + oss.str(), sharedOffs + 80'000 + i * _T_TD_SIZE_ + T_TD_CURRTIME});
+    ml.insert({dloc::sThrDataDl    + "_" + oss.str(), sharedOffs + 90'000 + i * _T_TD_SIZE_ + T_TD_DEADLINE});
   }
 
 

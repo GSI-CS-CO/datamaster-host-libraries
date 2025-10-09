@@ -133,6 +133,8 @@ void init()
 {
   const children_t cNonMeta = { n::sTMsg,     n::sCmdNoop, n::sCmdFlow,    n::sOrigin,     n::sStartThread, n::sSwitch,
                                 n::sCmdFlush, n::sCmdWait, n::sBlockFixed, n::sBlockAlign, n::sGlobal };
+
+  // TMsg
   addConstellationRule( ruleIndex_t{ n::sTMsg, e::sDefDst }, ConstellationRule( cNonMeta, 1, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sTMsg, e::sDynPar0 }, ConstellationRule( cNonMeta, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sTMsg, e::sDynPar1 }, ConstellationRule( cNonMeta, 0, 1 ) );
@@ -144,29 +146,42 @@ void init()
                         ConstellationRule( cNonMeta, 0, MaxOccurrance::REF ) );
   addConstellationRule( ruleIndex_t{ n::sTMsg, e::sAdr }, ConstellationRule( cNonMeta, 0, MaxOccurrance::REF ) );
   addConstellationRule( ruleIndex_t{ n::sTMsg, e::sWrite }, ConstellationRule( cNonMeta, 0, 1 ) );
+
+  // CmdNoop
   addConstellationRule( ruleIndex_t{ n::sCmdNoop, e::sDefDst }, ConstellationRule( cNonMeta, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sCmdNoop, e::sCmdTarget },
                         ConstellationRule( { n::sBlock, n::sBlockFixed, n::sBlockAlign }, 0, 1 ) );
+
+  // CmdFlow
   addConstellationRule( ruleIndex_t{ n::sCmdFlow, e::sDefDst }, ConstellationRule( cNonMeta, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sCmdFlow, e::sCmdTarget },
                         ConstellationRule( { n::sBlock, n::sBlockFixed, n::sBlockAlign }, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sCmdFlow, e::sCmdFlowDst }, ConstellationRule( cNonMeta, 0, 1 ) );
+
+  // Switch
   addConstellationRule( ruleIndex_t{ n::sSwitch, e::sDefDst }, ConstellationRule( cNonMeta, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sSwitch, e::sSwitchTarget },
                         ConstellationRule( { n::sBlock, n::sBlockFixed, n::sBlockAlign }, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sSwitch, e::sSwitchDst }, ConstellationRule( cNonMeta, 0, 1 ) );
+
+  // Origin
   addConstellationRule( ruleIndex_t{ n::sOrigin, e::sDefDst }, ConstellationRule( cNonMeta, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sOrigin, e::sOriginDst }, ConstellationRule( cNonMeta, 1, 1 ) );
+
   addConstellationRule( ruleIndex_t{ n::sStartThread, e::sDefDst }, ConstellationRule( cNonMeta, 0, 1 ) );
 
+  // Flush
   addConstellationRule( ruleIndex_t{ n::sCmdFlush, e::sDefDst }, ConstellationRule( cNonMeta, 1, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sCmdFlush, e::sCmdTarget },
                         ConstellationRule( { n::sBlock, n::sBlockFixed, n::sBlockAlign }, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sCmdFlush, e::sCmdFlushOvr }, ConstellationRule( cNonMeta, 0, 1 ) );
 
+  // Wait
   addConstellationRule( ruleIndex_t{ n::sCmdWait, e::sDefDst }, ConstellationRule( cNonMeta, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sCmdWait, e::sCmdTarget },
                         ConstellationRule( { n::sBlock, n::sBlockFixed, n::sBlockAlign }, 0, 1 ) );
+
+  // Block
   addConstellationRule( ruleIndex_t{ n::sBlockFixed, e::sDefDst }, ConstellationRule( cNonMeta, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sBlockFixed, e::sAltDst },
                         ConstellationRule( cNonMeta, 0, MaxOccurrance::DST ) );
@@ -181,6 +196,8 @@ void init()
   addConstellationRule( ruleIndex_t{ n::sBlockFixed, e::sQPrio[PRIO_IL] }, ConstellationRule( { n::sQInfo }, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sBlockFixed, e::sQPrio[PRIO_HI] }, ConstellationRule( { n::sQInfo }, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sBlockFixed, e::sQPrio[PRIO_LO] }, ConstellationRule( { n::sQInfo }, 0, 1 ) );
+
+  // Block Align
   addConstellationRule( ruleIndex_t{ n::sBlockAlign, e::sDefDst }, ConstellationRule( cNonMeta, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sBlockAlign, e::sAltDst },
                         ConstellationRule( cNonMeta, 0, MaxOccurrance::DST ) );
@@ -195,6 +212,7 @@ void init()
   addConstellationRule( ruleIndex_t{ n::sBlockAlign, e::sQPrio[PRIO_IL] }, ConstellationRule( { n::sQInfo }, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sBlockAlign, e::sQPrio[PRIO_HI] }, ConstellationRule( { n::sQInfo }, 0, 1 ) );
   addConstellationRule( ruleIndex_t{ n::sBlockAlign, e::sQPrio[PRIO_LO] }, ConstellationRule( { n::sQInfo }, 0, 1 ) );
+
   addConstellationRule( ruleIndex_t{ n::sQInfo, e::sMeta },
                         ConstellationRule( { n::sQBuf }, MaxOccurrance::META, MaxOccurrance::META ) );
   addConstellationRule( ruleIndex_t{ n::sDstList, e::sDefDst },

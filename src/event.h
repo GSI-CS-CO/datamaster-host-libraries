@@ -249,6 +249,7 @@ public:
 
 // Makes receiving Q clear <prio> queue buffer when leaving block once
 class Flush : public Command {
+  uint8_t mode;
   uint8_t frmIl=0, toIl=0;
   uint8_t frmHi=0, toHi=0;
   uint8_t frmLo=0, toLo=0;
@@ -264,7 +265,7 @@ public:
         : Command(name, pattern, beamproc, hash, cpu, ((flags & ~NFLG_TYPE_SMSK) | (NODE_TYPE_CFLUSH << NFLG_TYPE_POS)), tOffs, tValid,
         (ACT_TYPE_FLUSH << ACT_TYPE_POS) | (prio & ACT_PRIO_MSK) << ACT_PRIO_POS | (1 & ACT_QTY_MSK) << ACT_QTY_POS | vabs << ACT_VABS_POS | (((qIl << PRIO_IL) | (qHi << PRIO_HI) | (qLo << PRIO_LO)) & ACT_FLUSH_PRIO_MSK) << ACT_FLUSH_PRIO_POS | permanent << ACT_CHP_POS),
         frmIl(frmIl), toIl(toIl), frmHi(frmHi), toHi(toHi), frmLo(frmLo), toLo(toLo) {};
-  Flush(const Flush& src) : Command(src), frmIl(src.frmIl), toIl(src.toIl), frmHi(src.frmHi), toHi(src.toHi), frmLo(src.frmLo), toLo(src.toLo) {}
+  Flush(const Flush& src) : Command(src), mode(src.mode), frmIl(src.frmIl), toIl(src.toIl), frmHi(src.frmHi), toHi(src.toHi), frmLo(src.frmLo), toLo(src.toLo) {}
   ~Flush() {};
     node_ptr clone() const override { return std::make_shared<Flush>(Flush(*this)); }
 
