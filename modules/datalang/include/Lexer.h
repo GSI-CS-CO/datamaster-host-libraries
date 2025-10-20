@@ -3,22 +3,13 @@
 #include "datalang_export.h"
 
 #include <cstdint>
+#include <string>
+#include <variant>
 #include <span>
+#include <optional>
 
 namespace datalang
 {
-enum class DATALANG_EXPORT TokenType
-{
-  Constant, // a constant number, example: 42
-  Variable, // a variable name, example: myVar
-  Plus,     // +
-  Minus,    // -
-  Asterisk, // *
-  Slash,    // /
-  LParen,   // (
-  RParen,   // )
-  End       // end of input
-};
 
 enum class DATALANG_EXPORT OperatorType
 {
@@ -48,16 +39,26 @@ struct ScopeToken
   bool opens; // true if '(', false if ')'
 };
 
-using Token = std::variant<ConstantToken, VariableToken, OperatorToken, ScopeToken>;
+struct EndOfStreamToken
+{
+};
+
+struct InvalidToken
+{
+  std::string value;
+};
+
+using Token = std::variant<ConstantToken, VariableToken, OperatorToken, ScopeToken, EndOfStreamToken, InvalidToken>;
+bool operator==( const Token& lhs, const Token& rhs );
 
 class DATALANG_EXPORT Lexer
 {
 public:
-  Lexer( const std::span<const char>& input );
+  Lexer( std::span<const char> input );
   Token getNextToken();
 
 private:
-  std::span<const char> input;
-  size_t                currentPosition;
+  std::span<const char> m_input;
+  size_t      m_currentPosition;
 };
 } // namespace datalang
