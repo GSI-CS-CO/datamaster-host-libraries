@@ -34,7 +34,7 @@ memory-map:
             - item:
                 description: write maximum of IA and IB to result
                 name: max
-                value: 7        
+                value: 6        
             
             - item:
                 description: logic left shift of IA by IB bits and write to result
@@ -45,7 +45,7 @@ memory-map:
                 name: shr
                 value: 33
             - item:
-                description: arithmetic left shift of IA by IB bits and write to result
+                description: arithmetic right shift of IA by IB bits and write to result
                 name: asr
                 value: 34
 
@@ -61,6 +61,47 @@ memory-map:
                 description: logical bitwise XOR IA and IB and write to result
                 name: xor
                 value: 66
+            - item:
+                description: logical bitwise NOT IA and write to result (IB unused)
+                name: not
+                value: 67
+            - item:
+                description: logical bitwise NAND IA and IB and write to result  
+                name: nand
+                value: 68
+
+            - item:
+                description: compare IA and IB, result is 1 if IA == IB, 0 otherwise
+                name: eq
+                value: 96
+            - item:
+                description: compare IA and IB, result is 1 if IA != IB, 0 otherwise
+                name: ne
+                value: 97
+            - item:
+                description: compare IA and IB, result is 1 if IA < IB, 0 otherwise
+                name: lt
+                value: 98
+            - item:
+                description: compare IA and IB, result is 1 if IA <= IB, 0 otherwise
+                name: le
+                value: 99
+            - item:
+                description: compare IA and IB, result is 1 if IA > IB, 0 otherwise
+                name: gt
+                value: 100
+            - item:
+                description: compare IA and IB, result is 1 if IA >= IB, 0 otherwise
+                name: ge
+                value: 101
+            - item:
+                description: conditional select - result is IA if IC != 0, else IB
+                name: sel
+                value: 102
+            - item:
+                description: conditional move - result is IA if IB != 0, else 0
+                name: cmov
+                value: 103
 
     
             - item:
@@ -79,7 +120,7 @@ memory-map:
             - item:
                 description: calculate hash for IA, result is hash
                 name: hsc
-                value: 130    
+                value: 131    
             
             - item:
                 description: result is 1
@@ -136,25 +177,7 @@ memory-map:
       description: Opcodes for all three operations and inverter settings for in- and outputs off(0)/on(1)
       width: 32
       access: rw
-      children:
-          - field:
-              name: opcI
-              description: 8b Opcode I
-              range: 7-0
-              x-enums:
-                name: opcode
-          - field:
-              name: opcJ
-              description: 8b Opcode J
-              range: 15-8
-              x-enums:
-                name: opcode
-          - field:
-              name: opcK
-              description: 8b Opcode K
-              range: 23-16
-              x-enums:
-                name: opcode
+      children:l
           - field:
               name: invinA
               description: Input 0 Inverter 

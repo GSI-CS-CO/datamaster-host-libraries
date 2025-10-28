@@ -47,6 +47,7 @@ elseif(${BUILD_HOST})
 
   if(ENABLE_TESTS)
     add_subdirectory(test/unit)
+    add_subdirectory(test/integration)
   endif()
 
   include(CPack)

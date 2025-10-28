@@ -38,17 +38,28 @@ target_include_directories(
     ${PROJECT_NAME}
     PRIVATE
     ${CMAKE_SOURCE_DIR}/modules/datamaster-host-libraries/src
+    ${CMAKE_SOURCE_DIR}/test/stubs/
     ${PROJECT_SOURCE_DIR}/src
 )
 
 add_executable(LexerTest
     ${PROJECT_SOURCE_DIR}/src/datalang/LexerTest.cpp
+    ${PROJECT_SOURCE_DIR}/src/datalang/ParserTest.cpp
+    ${PROJECT_SOURCE_DIR}/src/datalang/ASTInterpreterTest.cpp
 )
 
 target_link_libraries(
     LexerTest
     GTest::gtest_main
     datalang
+)
+
+target_include_directories(
+    LexerTest
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/modules/datamaster-host-libraries/src
+    ${CMAKE_SOURCE_DIR}/test/stubs/
+    ${PROJECT_SOURCE_DIR}/src
 )
 
 include(GoogleTest)

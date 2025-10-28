@@ -8,6 +8,8 @@ include(GenerateExportHeader)
 
 set(SOURCES
     src/Lexer.cpp
+    src/Parser.cpp
+    src/ASTInterpreter.cpp
 )
 
 
