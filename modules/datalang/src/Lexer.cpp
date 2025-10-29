@@ -6,13 +6,20 @@ using datalang::Token;
 namespace
 {
 
-constexpr char OPERATOR_START_TOKENS[] = { '+', '-', '*', '/', '%', '&', '|', '^', '~', '<', '>', '=', '~', ';' };
+// Characters that can start an operator token
+constexpr char OPERATOR_START_TOKENS[] = { '+', '-', '*', '/', '%', '&', '|', '^', '~', '<', '>', '=', '~', ';', '!' };
 
+/**
+ * Checks if a character is a whitespace character.
+ */
 bool isWhitespace( char c )
 {
   return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
 
+/**
+ * Skips whitespace characters in the input starting from the given position.
+ */
 bool skipWhitespace( std::span<const char> input, size_t& position )
 {
   while ( position < input.size() && isWhitespace( input[position] ) )
@@ -22,21 +29,33 @@ bool skipWhitespace( std::span<const char> input, size_t& position )
   return position < input.size();
 }
 
+/**
+ * Checks if a character is a numeric digit.
+ */
 bool isNumber( char c )
 {
   return c >= '0' && c <= '9';
 }
 
+/**
+ * Checks if a character is an alphabetic letter.
+ */
 bool isAlpha( char c )
 {
   return ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' );
 }
 
+/**
+ * Checks if a character is alphanumeric (letter or digit).
+ */
 bool isAlphaNumeric( char c )
 {
   return isAlpha( c ) || isNumber( c );
 }
 
+/**
+ * Checks if a character can start an operator token.
+ */
 bool isOperatorStartChar( char c )
 {
   for ( char op : OPERATOR_START_TOKENS )
@@ -51,6 +70,7 @@ bool isOperatorStartChar( char c )
 
 namespace datalang
 {
+
 bool operator==( const Token& lhs, const Token& rhs )
 {
   return std::visit(

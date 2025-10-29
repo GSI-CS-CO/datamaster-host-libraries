@@ -7,6 +7,9 @@
 namespace datalang
 {
 
+/**
+ * Parser class for parsing a stream of tokens into an AST.
+ */
 class DATALANG_EXPORT Parser
 {
 public:
@@ -14,6 +17,9 @@ public:
   ~Parser() = default;
 
 public:
+  /**
+   * Parses the given token stream into a Program AST.
+   */
   Program parse( const TokenStream& tokens );
 
 private:

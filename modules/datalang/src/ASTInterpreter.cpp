@@ -4,6 +4,9 @@ using namespace datalang;
 
 namespace
 {
+/**
+ * Interprets an expression and returns the resulting constant.
+ */
 ConstantPtr interpretExpression( const Expression& expr, IASTInterpreterEnvironment& env )
 {
   return std::visit(
@@ -134,6 +137,9 @@ ConstantPtr interpretExpression( const Expression& expr, IASTInterpreterEnvironm
       expr );
 }
 
+/**
+ * Interprets a statement and returns the resulting constant.
+ */
 ConstantPtr interpretStatement( const Statement& stmt, IASTInterpreterEnvironment& env )
 {
   return std::visit(

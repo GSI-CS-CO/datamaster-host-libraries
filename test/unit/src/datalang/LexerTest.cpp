@@ -349,3 +349,29 @@ TEST( LexerTest, AllTokens )
                        datalang::ScopeToken{ false },
                        datalang::EndOfStreamToken{} } );
 }
+
+TEST( LexerTest, MinMaxExpressions )
+{
+  std::string input = "min( a + b, c - d )";
+  ExpectTokenStream( input,
+                     { datalang::MinMaxToken{ true },
+                       datalang::GroupingToken{ true },
+                       datalang::VariableToken{ "a" },
+                       datalang::OperatorToken{ datalang::OperatorType::Add },
+                       datalang::VariableToken{ "b" },
+                       datalang::StatementSeparatorToken{},
+                       datalang::VariableToken{ "c" },
+                       datalang::OperatorToken{ datalang::OperatorType::Subtract },
+                       datalang::VariableToken{ "d" },
+                       datalang::GroupingToken{ false },
+                       datalang::EndOfStreamToken{} } );
+}
+TEST( LexerTest, Inequality )
+{
+  std::string input = "x != y";
+  ExpectTokenStream( input,
+                     { datalang::VariableToken{ "x" },
+                       datalang::OperatorToken{ datalang::OperatorType::NotEqual },
+                       datalang::VariableToken{ "y" },
+                       datalang::EndOfStreamToken{} } );
+}

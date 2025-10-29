@@ -115,12 +115,18 @@ struct UnaryExpr;
 using BinaryExprPtr = std::unique_ptr<BinaryExpression>;
 using UnaryExprPtr  = std::unique_ptr<UnaryExpr>;
 
+/**
+ * Identifier expression representing a variable.
+ */
 struct Identifier
 {
   std::string name;
 };
 using IdentifierPtr = std::unique_ptr<Identifier>;
 
+/**
+ * Constant expression representing an integer constant.
+ */
 struct Constant
 {
   int32_t value;
@@ -130,6 +136,9 @@ using ConstantPtr = std::unique_ptr<Constant>;
 
 using Expression = std::variant<UnaryExprPtr, BinaryExprPtr, IdentifierPtr, ConstantPtr>;
 
+/**
+ * Binary expression representing operations with two operands.
+ */
 struct BinaryExpression
 {
   Expression   left;
@@ -137,6 +146,9 @@ struct BinaryExpression
   Expression   right;
 };
 
+/**
+ * Unary expression representing operations with a single operand.
+ */
 struct UnaryExpr
 {
   OperatorType op;
@@ -151,6 +163,9 @@ using ExprPtr        = std::unique_ptr<Expression>;
 
 using Statement = std::variant<IfStatementPtr, ExprPtr>;
 
+/**
+ * If statement representing conditional execution.
+ */
 struct IfStatement
 {
   ~IfStatement() = default;
@@ -159,6 +174,9 @@ struct IfStatement
   std::optional<Statement> elseBranch;
 };
 
+/**
+ * Program representing the root of the AST.
+ */
 struct Program
 {
   std::vector<Statement> statements;

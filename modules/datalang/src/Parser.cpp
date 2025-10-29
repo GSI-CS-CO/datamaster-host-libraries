@@ -8,10 +8,52 @@ using namespace datalang;
 namespace
 {
 
+std::optional<OperatorType>
+tryConsumeOperator( const TokenStream& tokens, size_t& currentIndex, OperatorType expectedOp )
+{
+  if ( std::holds_alternative<OperatorToken>( tokens[currentIndex] ) )
+  {
+    auto opToken = std::get<OperatorToken>( tokens[currentIndex] ).op;
+    if ( opToken == expectedOp )
+    {
+      ++currentIndex;
+      return expectedOp;
+    }
+  }
+  return std::nullopt;
+}
+
+std::optional<OperatorType>
+tryConsumeAnyOperator( const TokenStream& tokens, size_t& currentIndex, const std::vector<OperatorType>& expectedOps )
+{
+  if ( std::holds_alternative<OperatorToken>( tokens[currentIndex] ) )
+  {
+    auto opToken = std::get<OperatorToken>( tokens[currentIndex] ).op;
+    for ( const auto& expectedOp : expectedOps )
+    {
+      if ( opToken == expectedOp )
+      {
+        ++currentIndex;
+        return expectedOp;
+      }
+    }
+  }
+  return std::nullopt;
+}
+
+// Forward declarations
 std::optional<Expression> parseExpression( const TokenStream& tokens, size_t& currentIndex );
 std::optional<Statement>  parseStatement( const TokenStream& tokens, size_t& currentIndex );
 
-bool expectAndComsume( const TokenStream& tokens, size_t& currentIndex, const datalang::Token& expectedToken )
+/**
+ * Tries to match and consume the expected token from the token stream.
+ *
+ * @param tokens The stream of tokens.
+ * @param currentIndex The current index in the token stream.
+ * @param expectedToken The token to expect and consume.
+ * @return True if the expected token was found and consumed, false otherwise.
+ */
+bool expectAndConsume( const TokenStream& tokens, size_t& currentIndex, const datalang::Token& expectedToken )
 {
   if ( currentIndex < tokens.size() && tokens[currentIndex] == expectedToken )
   {
@@ -21,13 +63,26 @@ bool expectAndComsume( const TokenStream& tokens, size_t& currentIndex, const da
   return false;
 }
 
+/**
+ * Consumes an EndOfStatementToken from the token stream.
+ *
+ * @param tokens The stream of tokens.
+ * @param currentIndex The current index in the token stream.
+ */
 void consumeEndOfStatement( const TokenStream& tokens, size_t& currentIndex )
 {
-  expectAndComsume( tokens, currentIndex, datalang::EndOfStatementToken{} );
+  expectAndConsume( tokens, currentIndex, datalang::EndOfStatementToken{} );
 }
 
+/**
+ * Resolves a binary expression from the given left and right expressions and operator.
+ * @param left The left expression.
+ * @param right The right expression.
+ * @param op The operator.
+ * @return The resolved expression, or std::nullopt if resolution failed.
+ */
 std::optional<Expression>
-resolveExpression( std::optional<Expression> left, std::optional<Expression> right, OperatorType op )
+resolveBinaryExpression( std::optional<Expression> left, std::optional<Expression> right, OperatorType op )
 {
   if ( left.has_value() && right.has_value() )
   {
@@ -41,21 +96,34 @@ resolveExpression( std::optional<Expression> left, std::optional<Expression> rig
   {
     return std::move( *left );
   }
-  return std::nullopt;
+  else
+    return std::move( *right );
 }
 
+/**
+ * Parses a primary expression from the token stream.
+ * @param tokens The stream of tokens.
+ * @param currentIndex The current index in the token stream.
+ * @return The parsed primary expression, or std::nullopt if parsing failed.
+ */
 std::optional<Expression> parsePrimary( const TokenStream& tokens, size_t& currentIndex );
 
+/**
+ * Parses an IfStatement from the token stream.
+ * @param tokens The stream of tokens.
+ * @param currentIndex The current index in the token stream.
+ * @return The parsed IfStatement, or std::nullopt if parsing failed.
+ */
 std::optional<Statement> parseIfStatement( const TokenStream& tokens, size_t& currentIndex )
 {
-  auto isIfStatement = expectAndComsume( tokens, currentIndex, StatementToken{ StatementType::If } );
+  auto isIfStatement = expectAndConsume( tokens, currentIndex, StatementToken{ StatementType::If } );
   if ( !isIfStatement )
   {
     return std::nullopt;
   }
 
   // Further parsing logic for IfStatement goes here
-  if ( !expectAndComsume( tokens, currentIndex, GroupingToken{ true } ) )
+  if ( !expectAndConsume( tokens, currentIndex, GroupingToken{ true } ) )
   {
     // TODO: Error handling for missing opening parenthesis
     return std::nullopt;
@@ -63,7 +131,7 @@ std::optional<Statement> parseIfStatement( const TokenStream& tokens, size_t& cu
 
   auto condition                = parseExpression( tokens, currentIndex );
   auto correctlyParsedCondition = condition.has_value();
-  auto scopeClosedCorrectly     = expectAndComsume( tokens, currentIndex, GroupingToken{ false } );
+  auto scopeClosedCorrectly     = expectAndConsume( tokens, currentIndex, GroupingToken{ false } );
 
   if ( !correctlyParsedCondition || !scopeClosedCorrectly )
   {
@@ -74,7 +142,7 @@ std::optional<Statement> parseIfStatement( const TokenStream& tokens, size_t& cu
   auto                     thenBranch = parseStatement( tokens, currentIndex );
   std::optional<Statement> elseBranch = std::nullopt;
 
-  if ( expectAndComsume( tokens, currentIndex, StatementToken{ StatementType::Else } ) )
+  if ( expectAndConsume( tokens, currentIndex, StatementToken{ StatementType::Else } ) )
   {
     elseBranch = parseStatement( tokens, currentIndex );
   }
@@ -87,9 +155,15 @@ std::optional<Statement> parseIfStatement( const TokenStream& tokens, size_t& cu
   return ifStmt;
 }
 
+/**
+ * Parses a Block from the token stream.
+ * @param tokens The stream of tokens.
+ * @param currentIndex The current index in the token stream.
+ * @return The parsed Block, or std::nullopt if parsing failed.
+ */
 std::optional<Statement> parseBlock( const TokenStream& tokens, size_t& currentIndex )
 {
-  if ( !expectAndComsume( tokens, currentIndex, ScopeToken{ true } ) )
+  if ( !expectAndConsume( tokens, currentIndex, ScopeToken{ true } ) )
   {
     // TODO: Error handling for missing opening brace
     return std::nullopt;
@@ -98,7 +172,7 @@ std::optional<Statement> parseBlock( const TokenStream& tokens, size_t& currentI
   auto stmt = parseStatement( tokens, currentIndex );
 
   // Further parsing logic for Block goes here
-  if ( !expectAndComsume( tokens, currentIndex, ScopeToken{ false } ) )
+  if ( !expectAndConsume( tokens, currentIndex, ScopeToken{ false } ) )
   {
     // TODO: Error handling for missing closing brace
     return std::nullopt;
@@ -107,6 +181,12 @@ std::optional<Statement> parseBlock( const TokenStream& tokens, size_t& currentI
   return stmt;
 }
 
+/**
+ * Parses a min/max function call from the token stream.
+ * @param tokens The stream of tokens.
+ * @param currentIndex The current index in the token stream.
+ * @return The parsed min/max expression, or std::nullopt if parsing failed.
+ */
 std::optional<Expression> parseMinMaxCall( const TokenStream& tokens, size_t& currentIndex )
 {
   if ( !std::holds_alternative<MinMaxToken>( tokens[currentIndex] ) )
@@ -149,13 +229,16 @@ std::optional<Expression> parseMinMaxCall( const TokenStream& tokens, size_t& cu
 
   ++currentIndex; // consume ')'
 
-  BinaryExprPtr minMaxExpr = std::make_unique<BinaryExpression>();
-  minMaxExpr->left         = std::move( firstArg.value() );
-  minMaxExpr->right        = std::move( secondArg.value() );
-  minMaxExpr->op           = ( minMaxToken.isMin ) ? OperatorType::Min : OperatorType::Max;
-  return std::move( minMaxExpr );
+  return resolveBinaryExpression(
+      std::move( firstArg ), std::move( secondArg ), ( minMaxToken.isMin ) ? OperatorType::Min : OperatorType::Max );
 }
 
+/**
+ * Parses a primary expression from the token stream.
+ * @param tokens The stream of tokens.
+ * @param currentIndex The current index in the token stream.
+ * @return The parsed primary expression, or std::nullopt if parsing failed.
+ */
 std::optional<Expression> parsePrimary( const TokenStream& tokens, size_t& currentIndex )
 {
   if ( std::holds_alternative<ConstantToken>( tokens[currentIndex] ) )
@@ -208,60 +291,58 @@ std::optional<Expression> parsePrimary( const TokenStream& tokens, size_t& curre
   return std::nullopt;
 }
 
+/**
+ * Parses a unary operator from the token stream.
+ * @param tokens The stream of tokens.
+ * @param currentIndex The current index in the token stream.
+ * @return The parsed unary operator, or std::nullopt if parsing failed.
+ */
 std::optional<OperatorType> parseUnaryOp( const TokenStream& tokens, size_t& currentIndex )
 {
-  if ( !std::holds_alternative<OperatorToken>( tokens[currentIndex] ) )
-  {
-    return std::nullopt;
-  }
-
-  auto opToken = std::get<OperatorToken>( tokens[currentIndex] ).op;
-  if ( !( opToken == OperatorType::Subtract || opToken == OperatorType::BitNot ) )
-  {
-    return std::nullopt;
-  }
-
-  ++currentIndex;
-  return opToken;
+  return tryConsumeAnyOperator( tokens, currentIndex, { OperatorType::Subtract, OperatorType::BitNot } );
 }
 
+/**
+ * Parses a unary expression from the token stream.
+ * @param tokens The stream of tokens.
+ * @param currentIndex The current index in the token stream.
+ * @return The parsed unary expression, or std::nullopt if parsing failed.
+ */
 std::optional<Expression> parseUnaryExpr( const TokenStream& tokens, size_t& currentIndex )
 {
   auto potentialOp = parseUnaryOp( tokens, currentIndex );
-  if ( potentialOp.has_value() )
+  if ( !potentialOp.has_value() )
   {
-    auto unaryExpr = std::make_unique<UnaryExpr>();
-    unaryExpr->op  = *potentialOp;
-    auto operand   = parseUnaryExpr( tokens, currentIndex );
-    if ( !operand.has_value() )
-    {
-      return std::nullopt;
-    }
-    unaryExpr->operand = std::move( operand.value() );
-    return std::move( unaryExpr );
+    return parsePrimary( tokens, currentIndex );
   }
 
-  return parsePrimary( tokens, currentIndex );
+  auto unaryExpr = std::make_unique<UnaryExpr>();
+  unaryExpr->op  = *potentialOp;
+  auto operand   = parseUnaryExpr( tokens, currentIndex );
+
+  if ( !operand.has_value() )
+  {
+    return std::nullopt;
+  }
+
+  unaryExpr->operand = std::move( operand.value() );
+  return std::move( unaryExpr );
 }
 
-std::optional<Expression> parseMulExprTail( const TokenStream& tokens, size_t& currentIndex, OperatorType& op )
+std::optional<Expression>
+parseMulExprTail( Expression mulStartExpression, const TokenStream& tokens, size_t& currentIndex )
 {
-  if ( !std::holds_alternative<OperatorToken>( tokens[currentIndex] ) )
+  auto operatorConsumed = tryConsumeAnyOperator(
+      tokens, currentIndex, { OperatorType::Multiply, OperatorType::Divide, OperatorType::Modulus } );
+
+  if ( !operatorConsumed.has_value() )
   {
-    return std::nullopt;
+    return mulStartExpression;
   }
 
-  auto opToken = std::get<OperatorToken>( tokens[currentIndex] ).op;
-  if ( !( opToken == OperatorType::Multiply || opToken == OperatorType::Divide || opToken == OperatorType::Modulus ) )
-  {
-    return std::nullopt;
-  }
-
-  op = opToken;
-  ++currentIndex;
-  auto left  = parseUnaryExpr( tokens, currentIndex );
-  auto right = parseMulExprTail( tokens, currentIndex, op );
-  return resolveExpression( std::move( left ), std::move( right ), op );
+  auto left = parseUnaryExpr( tokens, currentIndex );
+  left      = resolveBinaryExpression( std::move( mulStartExpression ), std::move( left ), *operatorConsumed );
+  return parseMulExprTail( std::move( *left ), tokens, currentIndex );
 }
 
 std::optional<Expression> parseMulExpr( const TokenStream& tokens, size_t& currentIndex )
@@ -271,30 +352,20 @@ std::optional<Expression> parseMulExpr( const TokenStream& tokens, size_t& curre
   {
     return std::nullopt;
   }
-
-  OperatorType op    = OperatorType::Multiply; // Placeholder, will be set in parseMulExprTail
-  auto         right = parseMulExprTail( tokens, currentIndex, op );
-  return resolveExpression( std::move( left ), std::move( right ), op );
+  return parseMulExprTail( std::move( *left ), tokens, currentIndex );
 }
 
-std::optional<Expression> parseAddExprTail( const TokenStream& tokens, size_t& currentIndex, OperatorType& op )
+std::optional<Expression> parseAddExprTail( Expression addExprLeft, const TokenStream& tokens, size_t& currentIndex )
 {
-  if ( !std::holds_alternative<OperatorToken>( tokens[currentIndex] ) )
+  auto operatorConsumed = tryConsumeAnyOperator( tokens, currentIndex, { OperatorType::Add, OperatorType::Subtract } );
+  if ( !operatorConsumed.has_value() )
   {
-    return std::nullopt;
+    return addExprLeft;
   }
 
-  auto opToken = std::get<OperatorToken>( tokens[currentIndex] ).op;
-  if ( !( opToken == OperatorType::Add || opToken == OperatorType::Subtract ) )
-  {
-    return std::nullopt;
-  }
-
-  op = opToken;
-  ++currentIndex;
-  auto left  = parseMulExpr( tokens, currentIndex );
-  auto right = parseAddExprTail( tokens, currentIndex, op );
-  return resolveExpression( std::move( left ), std::move( right ), op );
+  auto left = parseMulExpr( tokens, currentIndex );
+  left      = resolveBinaryExpression( std::move( addExprLeft ), std::move( left ), *operatorConsumed );
+  return parseAddExprTail( std::move( *left ), tokens, currentIndex );
 }
 
 std::optional<Expression> parseAddExpr( const TokenStream& tokens, size_t& currentIndex )
@@ -305,29 +376,29 @@ std::optional<Expression> parseAddExpr( const TokenStream& tokens, size_t& curre
     return std::nullopt;
   }
 
-  OperatorType op    = OperatorType::Add; // Placeholder, will be set in parseAddExprTail
-  auto         right = parseAddExprTail( tokens, currentIndex, op );
-  return resolveExpression( std::move( left ), std::move( right ), op );
+  return parseAddExprTail( std::move( *left ), tokens, currentIndex );
 }
 
-std::optional<Expression> parseShiftExprTail( const TokenStream& tokens, size_t& currentIndex, OperatorType& op )
+std::optional<Expression>
+parseShiftExprTail( Expression shiftExpressionLeft, const TokenStream& tokens, size_t& currentIndex )
 {
   if ( !std::holds_alternative<OperatorToken>( tokens[currentIndex] ) )
   {
-    return std::nullopt;
+    return shiftExpressionLeft;
   }
 
   auto opToken = std::get<OperatorToken>( tokens[currentIndex] ).op;
   if ( !( opToken == OperatorType::LSH || opToken == OperatorType::RSH ) )
   {
-    return std::nullopt;
+    return shiftExpressionLeft;
   }
 
-  op = opToken;
   ++currentIndex;
-  auto left  = parseAddExpr( tokens, currentIndex );
-  auto right = parseShiftExprTail( tokens, currentIndex, op );
-  return resolveExpression( std::move( left ), std::move( right ), op );
+
+  OperatorType childOperatorType = OperatorType::LSH; // Placeholder for child operator
+  auto         left              = parseAddExpr( tokens, currentIndex );
+  left = resolveBinaryExpression( std::move( shiftExpressionLeft ), std::move( left ), opToken );
+  return parseShiftExprTail( std::move( *left ), tokens, currentIndex );
 }
 
 std::optional<Expression> parseShiftExpr( const TokenStream& tokens, size_t& currentIndex )
@@ -338,142 +409,142 @@ std::optional<Expression> parseShiftExpr( const TokenStream& tokens, size_t& cur
     return std::nullopt;
   }
 
-  OperatorType op = OperatorType::LSH; // Placeholder, will be set in parseShiftExprTail
-
-  auto right = parseShiftExprTail( tokens, currentIndex, op );
-  return resolveExpression( std::move( left ), std::move( right ), op );
+  return parseShiftExprTail( std::move( *left ), tokens, currentIndex );
 }
 
-std::optional<Expression> parseRelationalTail( const TokenStream& tokens, size_t& currentIndex, OperatorType& op )
+std::optional<Expression>
+parseRelationalTail( Expression relationalLeft, const TokenStream& tokens, size_t& currentIndex )
 {
   if ( !std::holds_alternative<OperatorToken>( tokens[currentIndex] ) )
   {
-    return std::nullopt;
+    return relationalLeft;
   }
 
   auto opToken = std::get<OperatorToken>( tokens[currentIndex] ).op;
   if ( !( opToken == OperatorType::LessThan || opToken == OperatorType::LessThanOrEqual ||
           opToken == OperatorType::GreaterThan || opToken == OperatorType::GreaterThanOrEqual ) )
   {
-    return std::nullopt;
+    return relationalLeft;
   }
 
-  op = opToken;
   ++currentIndex;
-  auto left  = parseShiftExpr( tokens, currentIndex );
-  auto right = parseRelationalTail( tokens, currentIndex, op );
-  return resolveExpression( std::move( left ), std::move( right ), op );
+  OperatorType childOperatorType = OperatorType::LessThan; // Placeholder for child operator
+  auto         left              = parseShiftExpr( tokens, currentIndex );
+  left                           = resolveBinaryExpression( std::move( relationalLeft ), std::move( left ), opToken );
+  return parseRelationalTail( std::move( *left ), tokens, currentIndex );
 }
 
 std::optional<Expression> parseRelational( const TokenStream& tokens, size_t& currentIndex )
 {
-  auto         left  = parseShiftExpr( tokens, currentIndex );
-  OperatorType op    = OperatorType::LessThan; // Placeholder, will be set in parseRelationalTail
-  auto         right = parseRelationalTail( tokens, currentIndex, op );
-  if ( left.has_value() && right.has_value() )
+  auto left = parseShiftExpr( tokens, currentIndex );
+  if ( !left.has_value() )
   {
-    BinaryExprPtr binExpr = std::make_unique<BinaryExpression>();
-    binExpr->left         = std::move( *left );
-    binExpr->op           = op;
-    binExpr->right        = std::move( *right );
-    return std::move( binExpr );
+    return std::nullopt;
   }
-  else if ( left.has_value() )
-  {
-    return std::move( left );
-  }
-  return std::nullopt;
+  return parseRelationalTail( std::move( *left ), tokens, currentIndex );
 }
 
-std::optional<Expression> parseEqualityTail( const TokenStream& tokens, size_t& currentIndex, OperatorType& op )
+std::optional<Expression> parseEqualityTail( Expression equalityLeft, const TokenStream& tokens, size_t& currentIndex )
 {
   if ( !std::holds_alternative<OperatorToken>( tokens[currentIndex] ) )
   {
-    return std::nullopt;
+    return equalityLeft;
   }
 
   auto opToken = std::get<OperatorToken>( tokens[currentIndex] ).op;
   if ( !( opToken == OperatorType::Equal || opToken == OperatorType::NotEqual ) )
   {
-    return std::nullopt;
+    return equalityLeft;
   }
 
-  op = opToken;
   ++currentIndex;
-  auto left  = parseRelational( tokens, currentIndex );
-  auto right = parseEqualityTail( tokens, currentIndex, op );
-  return resolveExpression( std::move( left ), std::move( right ), op );
+  OperatorType childOperatorType = OperatorType::Equal; // Placeholder for child operator
+  auto         left              = parseRelational( tokens, currentIndex );
+  left                           = resolveBinaryExpression( std::move( equalityLeft ), std::move( left ), opToken );
+  return parseEqualityTail( std::move( *left ), tokens, currentIndex );
 }
 
 std::optional<Expression> parseEquality( const TokenStream& tokens, size_t& currentIndex )
 {
-  auto         left  = parseRelational( tokens, currentIndex );
-  OperatorType op    = OperatorType::Equal; // Placeholder, will be set in parseEqualityTail
-  auto         right = parseEqualityTail( tokens, currentIndex, op );
-
-  return resolveExpression( std::move( left ), std::move( right ), op );
+  auto left = parseRelational( tokens, currentIndex );
+  if ( !left.has_value() )
+  {
+    return std::nullopt;
+  }
+  return parseEqualityTail( std::move( *left ), tokens, currentIndex );
 }
 
-std::optional<Expression> parseBitwiseAndTail( const TokenStream& tokens, size_t& currentIndex )
+std::optional<Expression>
+parseBitwiseAndTail( Expression bitwiseAndLeft, const TokenStream& tokens, size_t& currentIndex )
 {
   if ( !( std::holds_alternative<OperatorToken>( tokens[currentIndex] ) &&
           std::get<OperatorToken>( tokens[currentIndex] ).op == OperatorType::BitAnd ) )
   {
-    return std::nullopt;
+    return bitwiseAndLeft;
   }
 
   ++currentIndex;
-  auto left  = parseEquality( tokens, currentIndex );
-  auto right = parseBitwiseAndTail( tokens, currentIndex );
-  return resolveExpression( std::move( left ), std::move( right ), OperatorType::BitAnd );
+  auto left = parseEquality( tokens, currentIndex );
+  left      = resolveBinaryExpression( std::move( bitwiseAndLeft ), std::move( left ), OperatorType::BitAnd );
+  return parseBitwiseAndTail( std::move( *left ), tokens, currentIndex );
 }
 
 std::optional<Expression> parseBitwiseAnd( const TokenStream& tokens, size_t& currentIndex )
 {
-  auto left  = parseEquality( tokens, currentIndex );
-  auto right = parseBitwiseAndTail( tokens, currentIndex );
-  return resolveExpression( std::move( left ), std::move( right ), OperatorType::BitAnd );
+  auto left = parseEquality( tokens, currentIndex );
+  if ( !left.has_value() )
+  {
+    return std::nullopt;
+  }
+  return parseBitwiseAndTail( std::move( *left ), tokens, currentIndex );
 }
 
-std::optional<Expression> parseBitwiseXorTail( const TokenStream& tokens, size_t& currentIndex )
+std::optional<Expression>
+parseBitwiseXorTail( Expression bitwiseXorLeft, const TokenStream& tokens, size_t& currentIndex )
 {
   if ( !( std::holds_alternative<OperatorToken>( tokens[currentIndex] ) &&
           std::get<OperatorToken>( tokens[currentIndex] ).op == OperatorType::BitXor ) )
   {
-    return std::nullopt;
+    return bitwiseXorLeft;
   }
   ++currentIndex;
-  auto left  = parseBitwiseAnd( tokens, currentIndex );
-  auto right = parseBitwiseXorTail( tokens, currentIndex );
-  return resolveExpression( std::move( left ), std::move( right ), OperatorType::BitXor );
+  auto left = parseBitwiseAnd( tokens, currentIndex );
+  left      = resolveBinaryExpression( std::move( bitwiseXorLeft ), std::move( left ), OperatorType::BitXor );
+  return parseBitwiseXorTail( std::move( *left ), tokens, currentIndex );
 }
 
 std::optional<Expression> parseBitwiseXor( const TokenStream& tokens, size_t& currentIndex )
 {
-  auto left  = parseBitwiseAnd( tokens, currentIndex );
-  auto right = parseBitwiseXorTail( tokens, currentIndex );
-  return resolveExpression( std::move( left ), std::move( right ), OperatorType::BitXor );
+  auto left = parseBitwiseAnd( tokens, currentIndex );
+  if ( !left.has_value() )
+  {
+    return std::nullopt;
+  }
+  return parseBitwiseXorTail( std::move( *left ), tokens, currentIndex );
 }
 
-std::optional<Expression> parseBitwiseOrTail( const TokenStream& tokens, size_t& currentIndex )
+std::optional<Expression> parseBitwiseOrTail( Expression bitwiseLeft, const TokenStream& tokens, size_t& currentIndex )
 {
   if ( !( std::holds_alternative<OperatorToken>( tokens[currentIndex] ) &&
           std::get<OperatorToken>( tokens[currentIndex] ).op == OperatorType::BitOr ) )
   {
-    return std::nullopt;
+    return bitwiseLeft;
   }
 
   ++currentIndex;
-  auto left  = parseBitwiseXor( tokens, currentIndex );
-  auto right = parseBitwiseOrTail( tokens, currentIndex );
-  return resolveExpression( std::move( left ), std::move( right ), OperatorType::BitOr );
+  auto left = parseBitwiseXor( tokens, currentIndex );
+  left      = resolveBinaryExpression( std::move( bitwiseLeft ), std::move( left ), OperatorType::BitOr );
+  return parseBitwiseOrTail( std::move( *left ), tokens, currentIndex );
 }
 
 std::optional<Expression> parseBitwiseOr( const TokenStream& tokens, size_t& currentIndex )
 {
-  auto left  = parseBitwiseXor( tokens, currentIndex );
-  auto right = parseBitwiseOrTail( tokens, currentIndex );
-  return resolveExpression( std::move( left ), std::move( right ), OperatorType::BitOr );
+  auto left = parseBitwiseXor( tokens, currentIndex );
+  if ( !left.has_value() )
+  {
+    return std::nullopt;
+  }
+  return parseBitwiseOrTail( std::move( *left ), tokens, currentIndex );
 }
 
 std::optional<Expression> parseExpression( const TokenStream& tokens, size_t& currentIndex )
