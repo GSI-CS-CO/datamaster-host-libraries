@@ -181,4 +181,10 @@ struct Program
 {
   std::vector<Statement> statements;
 };
+
+inline bool operator==(Program const& lhs, Program const& rhs)
+{
+  return lhs.statements == rhs.statements;
+}
+
 } // namespace datalang

@@ -4,72 +4,22 @@
 #include <string>
 #include <variant>
 
-#include "DotParser.h"
-#include "ScheduleGraphTypes.h"
-#include <magic_enum/magic_enum.hpp>
-
 #include <fmt/core.h>
-
 #include <ftm_common.h>
+#include <magic_enum/magic_enum.hpp>
 
 #include <numeric> // For std::accumulate
 #include <stdexcept>
+
+#include "DotGraphParsingHelpers.h"
+#include "DotParser.h"
+#include "ScheduleGraphTypes.h"
 
 using namespace carpeDM;
 
 namespace
 {
 const auto REQUIRED_NODE_ATTRIBUTES = std::vector<std::string>{ "pattern", "cpu", "type" };
-
-template <typename T>
-constexpr T ParseValue( const std::string& value )
-{
-  if constexpr ( std::is_same_v<T, uint64_t> )
-  {
-    return static_cast<uint64_t>( std::stoull( value ) );
-  }
-  else if constexpr ( std::is_same_v<T, uint32_t> )
-  {
-    return static_cast<uint32_t>( std::stoul( value ) );
-  }
-  else if constexpr ( std::is_same_v<T, uint8_t> )
-  {
-    return static_cast<uint8_t>( std::stoi( value ) );
-  }
-  else if constexpr ( std::is_same_v<T, bool> )
-  {
-    if ( value == "true" || value == "1" )
-    {
-      return true;
-    }
-    else if ( value == "false" || value == "0" )
-    {
-      return false;
-    }
-    return false;
-  }
-  else if constexpr ( std::is_same_v<T, std::string> )
-  {
-    return value;
-  }
-  else
-  {
-    static_assert( std::is_same_v<T, uint64_t> || std::is_same_v<T, uint32_t> || std::is_same_v<T, uint8_t> ||
-                       std::is_same_v<T, bool>,
-                   "Unsupported type for ParseValue" );
-  }
-}
-
-template <typename T>
-T ParseOptionalValue( const std::unordered_map<std::string, std::string>& map, const std::string& key, T defaultValue )
-{
-  auto found = map.count( key ) != 0;
-  if ( !found )
-  {
-    return defaultValue;
-  }
-  return ParseValue<T>( map.at( key ) );
-}
 
 void ParseFlags( Node& attrs, const DotGraphVertex& vertex )
 {
@@ -380,61 +330,6 @@ bool IsEventType( carpeDM::VertexType type )
   } // explicitely no default case to enforce compiler errors
 
   return false;
-}
-
-std::optional<ConversionError>
-ExpectAttributeToBePresent( const decltype( DotGraph::vertices )::value_type::second_type& vertex,
-                            const std::string&                                             attributeName )
-{
-  if ( vertex.attributes.find( attributeName ) == vertex.attributes.end() )
-  {
-    return ConversionError{ fmt::format( "Missing required attribute: {} in Vertex: {}", attributeName, vertex.id ) };
-  }
-  return std::nullopt; // Attribute is present
-}
-
-std::optional<ConversionError> ExpectAttributeToBePresent( const decltype( DotGraph::edges )::value_type& edge,
-                                                           const std::string& attributeName )
-{
-  if ( edge.attributes.find( attributeName ) == edge.attributes.end() )
-  {
-    return ConversionError{ fmt::format(
-        "Missing required attribute: {} in Edge: {}", attributeName, edge.source + " -> " + edge.target ) };
-  }
-  return std::nullopt; // Attribute is present
-}
-
-template <class T>
-std::vector<ConversionError> ExpectAttributesToBePresent( const T& vertex, const std::vector<std::string>& attributes )
-{
-  std::vector<ConversionError> errors;
-  for ( const auto& attr : attributes )
-  {
-    auto error = ExpectAttributeToBePresent( vertex, attr );
-    if ( error.has_value() )
-    {
-      errors.push_back( *error );
-    }
-  }
-  return errors;
-}
-
-std::optional<ConversionError> ConcatenateErrors( const std::vector<ConversionError>& errors )
-{
-  if ( errors.empty() )
-  {
-    return std::nullopt; // No errors to concatenate
-  }
-
-  const auto concatenatedMessage = std::accumulate( errors.begin(),
-                                                    errors.end(),
-                                                    std::string{},
-                                                    []( const std::string& acc, const ConversionError& error )
-                                                    {
-                                                      return acc + ( acc.empty() ? "" : "\n" ) + error.message;
-                                                    } );
-
-  return ConversionError{ concatenatedMessage };
 }
 
 [[nodiscard]] auto VerifyCommandAttributes( const decltype( DotGraph::vertices )::value_type::second_type& vertex )

@@ -57,7 +57,7 @@ enum class DATALANG_EXPORT StatementType
  */
 struct ConstantToken
 {
-  int32_t value;
+  uint64_t value;
 };
 
 /**

@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
     ${PROJECT_SOURCE_DIR}/src/graphHelper.cpp
     ${PROJECT_SOURCE_DIR}/src/testParser.cpp
     ${PROJECT_SOURCE_DIR}/src/testScheduleGraph.cpp
+    ${PROJECT_SOURCE_DIR}/src/testTaskGraph.cpp
     ${PROJECT_SOURCE_DIR}/src/timingMessageIdMapping.cpp
 )
 
