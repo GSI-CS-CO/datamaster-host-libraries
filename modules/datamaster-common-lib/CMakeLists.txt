@@ -8,6 +8,7 @@ set(
         ${PROJECT_SOURCE_DIR}/src/DotParser.cpp
         ${PROJECT_SOURCE_DIR}/src/DatamasterFactory.cpp
         ${PROJECT_SOURCE_DIR}/src/ScheduleNodeMemoryManager.cpp
+        ${PROJECT_SOURCE_DIR}/src/TaskGraph.cpp
 )
 
 CPMAddPackage(
@@ -36,7 +37,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include
       ${CMAKE_CURRENT_BINARY_DIR}
       )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC magic_enum::magic_enum datamaster-common fmt spdlog::spdlog etherbone)
+target_link_libraries(${PROJECT_NAME} PUBLIC magic_enum::magic_enum datamaster-common fmt spdlog::spdlog etherbone datalang)
 target_compile_definitions(${PROJECT_NAME} PRIVATE DATAMASTER_COMMON_STATIC_DEFINE)
 
 generate_export_header(${PROJECT_NAME})

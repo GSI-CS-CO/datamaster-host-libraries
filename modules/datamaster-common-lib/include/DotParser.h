@@ -22,18 +22,34 @@ struct DotGraphEdge
   std::unordered_map<std::string, std::string> attributes;
 };
 
+/**
+ * @brief Properties of a DOT graph.
+ *
+ * This struct holds the properties of a DOT graph, including its name,
+ * whether it is strict, and any custom attributes associated with the graph.
+ *
+ */
 struct GraphProperties
 {
-  std::string                                  name;
-  bool                                         isStrict = false;
+  // Name of the graph
+  std::string name;
+  // Whether the graph is strict
+  bool isStrict = false;
+  // Custom attributes of the graph
   std::unordered_map<std::string, std::string> customAttributes;
 };
 
+/**
+ * @brief Representation of a DOT graph.
+ */
 struct DotGraph
 {
-  GraphProperties                                 properties;
+  // Properties of the graph
+  GraphProperties properties;
+  // Vertices in the graph
   std::unordered_map<std::string, DotGraphVertex> vertices;
-  std::vector<DotGraphEdge>                       edges;
+  // Edges in the graph
+  std::vector<DotGraphEdge> edges;
 };
 
 /**

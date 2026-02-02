@@ -1,5 +1,9 @@
 project(datamaster_tests)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 cmake_policy(SET CMP0135 NEW)
 include(FetchContent)
 FetchContent_Declare(
@@ -11,10 +15,6 @@ FetchContent_MakeAvailable(googletest)
 
 find_package(Boost REQUIRED COMPONENTS serialization graph)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 enable_testing()
 
 add_executable(${PROJECT_NAME}
@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
     ${PROJECT_SOURCE_DIR}/src/graphHelper.cpp
     ${PROJECT_SOURCE_DIR}/src/testParser.cpp
     ${PROJECT_SOURCE_DIR}/src/testScheduleGraph.cpp
+    ${PROJECT_SOURCE_DIR}/src/testTaskGraph.cpp
     ${PROJECT_SOURCE_DIR}/src/timingMessageIdMapping.cpp
 )
 
@@ -38,17 +39,28 @@ target_include_directories(
     ${PROJECT_NAME}
     PRIVATE
     ${CMAKE_SOURCE_DIR}/modules/datamaster-host-libraries/src
+    ${CMAKE_SOURCE_DIR}/test/stubs/
     ${PROJECT_SOURCE_DIR}/src
 )
 
 add_executable(LexerTest
     ${PROJECT_SOURCE_DIR}/src/datalang/LexerTest.cpp
+    ${PROJECT_SOURCE_DIR}/src/datalang/ParserTest.cpp
+    ${PROJECT_SOURCE_DIR}/src/datalang/ASTInterpreterTest.cpp
 )
 
 target_link_libraries(
     LexerTest
     GTest::gtest_main
     datalang
+)
+
+target_include_directories(
+    LexerTest
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/modules/datamaster-host-libraries/src
+    ${CMAKE_SOURCE_DIR}/test/stubs/
+    ${PROJECT_SOURCE_DIR}/src
 )
 
 include(GoogleTest)

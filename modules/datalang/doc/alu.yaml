@@ -1,0 +1,348 @@
+memory-map:
+  name: alu-node
+  description: DMv2 ALU node. 32/64b, 3 Operations in one node. 4 external inputs, 3 internal input from intermediate results, 1 output, switchable inverters for all I/Os
+  bus: wb-32-be
+  x-enums:
+    - enum:
+          name: opcode
+          width: 8
+          children:
+            - item:
+                description: add IB to IA and write to result
+                name: add
+                value: 0
+            - item:
+                description: subtract IB from IA and write to result
+                name: sub
+                value: 1
+            - item:
+                description: multiply IA with IB and write to result
+                name: mul
+                value: 2
+            - item:
+                description: divide IA by IB and write to result
+                name: div
+                value: 3
+            - item:
+                description: divide IA by IB and write remainder to result
+                name: mod
+                value: 4
+            - item:
+                description: write minimum of IA and IB to result
+                name: min
+                value: 5
+            - item:
+                description: write maximum of IA and IB to result
+                name: max
+                value: 6        
+            
+            - item:
+                description: logic left shift of IA by IB bits and write to result
+                name: shl
+                value: 32
+            - item:
+                description: logic right shift of IA by IB bits and write to result
+                name: shr
+                value: 33
+            - item:
+                description: arithmetic right shift of IA by IB bits and write to result
+                name: asr
+                value: 34
+
+            - item:
+                description: logical bitwise AND IA and IB and write to result
+                name: and
+                value: 64
+            - item:
+                description: logical bitwise OR IA and IB and write to result
+                name: or
+                value: 65
+            - item:
+                description: logical bitwise XOR IA and IB and write to result
+                name: xor
+                value: 66
+            - item:
+                description: logical bitwise NOT IA and write to result (IB unused)
+                name: not
+                value: 67
+            - item:
+                description: logical bitwise NAND IA and IB and write to result  
+                name: nand
+                value: 68
+
+            - item:
+                description: compare IA and IB, result is 1 if IA == IB, 0 otherwise
+                name: eq
+                value: 96
+            - item:
+                description: compare IA and IB, result is 1 if IA != IB, 0 otherwise
+                name: ne
+                value: 97
+            - item:
+                description: compare IA and IB, result is 1 if IA < IB, 0 otherwise
+                name: lt
+                value: 98
+            - item:
+                description: compare IA and IB, result is 1 if IA <= IB, 0 otherwise
+                name: le
+                value: 99
+            - item:
+                description: compare IA and IB, result is 1 if IA > IB, 0 otherwise
+                name: gt
+                value: 100
+            - item:
+                description: compare IA and IB, result is 1 if IA >= IB, 0 otherwise
+                name: ge
+                value: 101
+            - item:
+                description: conditional select - result is IA if IC != 0, else IB
+                name: sel
+                value: 102
+            - item:
+                description: conditional move - result is IA if IB != 0, else 0
+                name: cmov
+                value: 103
+
+    
+            - item:
+                description: Store value of IA at Adress IB, result is 0
+                name: sto
+                value: 128
+
+            - item:
+                description: Load from address IA, result is value at IA
+                name: lod
+                value: 129    
+            - item:
+                description: lookup hash IA, result is found address
+                name: hsl
+                value: 130    
+            - item:
+                description: calculate hash for IA, result is hash
+                name: hsc
+                value: 131    
+            
+            - item:
+                description: result is 1
+                name: one
+                value: 160
+            - item:
+                description: result is 0
+                name: zro
+                value: 161
+            - item:
+                description: result is value of previous alu zero flag
+                name: flz
+                value: 196
+            - item:
+                description: result is value of previous alu sign flag
+                name: fls
+                value: 197
+            - item:
+                description: result is value of previous alu carry flag
+                name: flc
+                value: 198
+            - item:
+                description: result is value of previous alu overflow flag
+                name: flo
+                value: 199
+            - item:
+                description: result is value of previous alu warning flags
+                name: flw
+                value: 200
+            - item:
+                description: result is value of previous alu error flags
+                name: fle
+                value: 201            
+
+            - item:
+                description: do nothing. does not change alu flags, result is undefined
+                name: nop
+                value: 255    
+
+
+             
+  children:
+  - repeat:
+      name: inputs
+      description: Input operand pointers A, B, C, D as array 0-3
+      count: 4
+      children:
+      - reg:
+          name: in
+          width: 32
+          access: rw
+  - reg:
+      name: opcodes
+      description: Opcodes for all three operations and inverter settings for in- and outputs off(0)/on(1)
+      width: 32
+      access: rw
+      children:l
+          - field:
+              name: invinA
+              description: Input 0 Inverter 
+              range: 24
+          - field:
+              name: invinB
+              description: Input 1 Inverter 
+              range: 25
+          - field:
+              name: invinC
+              description: Input 2 Inverter 
+              range: 26
+          - field:
+              name: invinD
+              description: Input 3 Inverter 
+              range: 27
+          - field:
+              name: invoutX
+              description: Output X Inverter
+              range: 28
+          - field:
+              name: invoutY
+              description: Output Y Inverter
+              range: 29
+          - field:
+              name: invoutZ
+              description: Output Z Inverter
+              range: 30
+          - field:
+              name: invoutO
+              description: Output O Inverter
+              range: 31               
+   
+  - reg:
+      name: select
+      description: selection of inputs for each operation, selection of intermediate result for output and choice of bit width (32/64b) for all inputs and outputs. intermediate results reside in thread context.
+      width: 32
+      access: rw
+      children:
+          - field:
+              name: bwidths
+              description: 3b type widths (32/64)for all operands and results A/B/C/D/X/Y/Z/O
+              range: 27-20
+          - field:
+              name: outO
+              description: 2b Assignment of X/Y/Z to Output O
+              range: 19-18    
+          - field:
+              name: inI0
+              description: 3b Select I 1st Operand A/B/C/D/X/Y/Z
+              range: 2-0
+          - field:
+              name: inI1
+              description: 3b Select I 2nd Operand A/B/C/D/X/Y/Z
+              range: 5-3
+          - field:
+              name: inJ0
+              description: 3b Select J 1st Operand A/B/C/D/X/Y/Z
+              range: 8-6
+          - field:
+              name: inJ1
+              description: 3b Select J 2nd Operand A/B/C/D/X/Y/Z
+              range: 11-9
+          - field:
+              name: inK0
+              description: 3b Select K 1st Operand A/B/C/D/X/Y/Z
+              range: 14-12
+          - field:
+              name: inK1
+              description: 3b Select K 2nd Operand A/B/C/D/X/Y/Z
+              range: 17-15
+  - reg:
+      name: aluflags
+      description: Flags showing properties of operations I,J and K after their result (zero, sign, carry, overflow) and alu node state (warning, error)
+      width: 32
+      access: rw
+      children:
+          - field:
+              name: zroI
+              description: Zero flag op I
+              range: 0
+          - field:
+              name: zroJ
+              description: Zero flag op J
+              range: 1
+          - field:
+              name: zroK
+              description: Zero flag op K
+              range: 2
+          - field:
+              name: sgnI
+              description: Negative / Sign flag op I
+              range: 3
+          - field:
+              name: sgnJ
+              description: Negative / Sign flag op J
+              range: 4
+          - field:
+              name: sgnK
+              description: Negative / Sign flag op K
+              range: 5
+          - field:
+              name: cryI
+              description: Carry Flag op I
+              range: 6
+          - field:
+              name: cryJ
+              description: Carry Flag op J
+              range: 7
+          - field:
+              name: cryK
+              description: Carry Flag op K
+              range: 8
+          - field:
+              name: ovrI
+              description: Overflow Flag op I
+              range: 9
+          - field:
+              name: ovrJ
+              description: Overflow Flag op J
+              range: 10
+          - field:
+              name: ovrK
+              description: Overflow Flag op K
+              range: 11
+          - field:
+              name: err
+              description: Error Flags
+              range: 31-28       
+          - field:
+              name: wrn
+              description: Warning Flags
+              range: 27-24
+          
+  - reg:
+      name: output
+      description: Pointer for writing assigned result to memory
+      width: 32
+      access: rw
+  - reg:
+      name: reserved
+      description: Reserved for future use
+      width: 32
+      access: rw    
+  - reg:
+      name: fieldflags
+      description: Values determining the source of each node field except the essential hash/nodeflags/nextp
+      width: 32
+      access: rw
+
+  - reg:
+      name: hash
+      description: Hash value identifying this node
+      width: 32
+      access: rw
+  - reg:
+      name: nodeflags
+      description: Flags revelant to all graph nodes
+      width: 32
+      access: rw    
+  - reg:
+      name: nextp
+      description: Pointer to next node
+      width: 32
+      access: rw        
+       
+                
+          
